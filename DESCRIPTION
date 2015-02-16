@@ -1,0 +1,29 @@
+Package: powerfor
+Type: Package
+Title: Provides all code for the thesis An Empirical Comparison of Models for
+    Forecasting Electricity Prices by Andreas Keller Leth Laursen.
+Version: 1.0
+Date: 2015-02-09
+Author: Andreas Keller Leth Laursen.
+Maintainer: Andreas Keller Leth Laursen. <andreas.keller@gmail.com>
+Description: Provides all code for the thesis An Empirical Comparison of Models
+    for Forecasting Electricity Prices by Andreas Keller Leth Laursen. All code
+    written by the author.
+LinkingTo: Rcpp
+Imports: 
+    magrittr,
+    rvest,
+    dplyr,
+    broom,
+    XML,
+    lazyeval,
+    ggplot2,
+    e1071,
+    tseries,
+    gridExtra,
+    xtable,
+    rugarch,
+    parallel,
+    Rcpp,
+    tidyr
+License: file LICENCE

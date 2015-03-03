@@ -10,3 +10,21 @@ ewma <- function(x, lambda = 0.975) {
     .Call('powerfor_ewma', PACKAGE = 'powerfor', x, lambda)
 }
 
+#' Loglikelihood function for Escribano2012 model a
+#' @param theta A parameter vector
+#' @param price A price vector
+#' @param week_dum A week dummy matrix
+#' @export
+loglik_a <- function(theta, price, week_dum) {
+    .Call('powerfor_loglik_a', PACKAGE = 'powerfor', theta, price, week_dum)
+}
+
+#' Loglikelihood function for Escribano2012 model b
+#' @param theta A parameter vector
+#' @param price A price vector
+#' @param week_dum A week dummy matrix
+#' @export
+loglik_a_sim <- function(theta, price, week_dum) {
+    .Call('powerfor_loglik_a_sim', PACKAGE = 'powerfor', theta, price, week_dum)
+}
+

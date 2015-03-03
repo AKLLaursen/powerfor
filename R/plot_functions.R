@@ -27,7 +27,7 @@ draw_line_plot <- function(input_frame, xlabel, ylabel, input, file_name = NULL,
            path = save_path,
            scale = 1,
            width = 21,
-           height = 21 * 0.5,
+           height = 29.7 * 0.5,
            units = "cm",
            dpi = 1000)
   }
@@ -91,7 +91,7 @@ draw_acf <- function(input_frame, lags, input, file_name = NULL,
            path = save_path,
            scale = 1,
            width = 21,
-           height = 21 * 0.5,
+           height = 29.7 * 0.5,
            units = "cm",
            dpi = 1000)
   }
@@ -140,7 +140,7 @@ draw_periodogram <- function(input_frame, input, log = TRUE, file_name = NULL,
            path = save_path,
            scale = 1,
            width = 21,
-           height = 21 * 0.5,
+           height = 29.7 * 0.5,
            units = "cm",
            dpi = 1000)
   }
@@ -208,7 +208,7 @@ plot_lrts <- function(input_frame_spot, input_frame_intraday, file_name,
            path = save_path,
            scale = 1,
            width = 21,
-           height = 21,
+           height = 29.7 * 0.5,
            units = "cm",
            dpi = 1000)
   }
@@ -274,7 +274,7 @@ plot_srs <- function(input_frame_spot, input_frame_intraday, file_name,
            path = save_path,
            scale = 1,
            width = 21,
-           height = 21 * 0.75,
+           height = 29.7 * 0.5,
            units = "cm",
            dpi = 1000)
   }
@@ -356,7 +356,58 @@ plot_spike <- function(input_frame_spot, input_frame_intraday, file_name,
            path = save_path,
            scale = 1,
            width = 21,
-           height = 21 * 0.75,
+           height = 29.7 * 0.5,
+           units = "cm",
+           dpi = 1000)
+  }
+}
+
+#' Function plotting negative prices for dayahed data.
+#' 
+#' @param input_frame A dataframe with a series named price
+#' @param file_name A string indicating name of output
+#' @param save_path A string with path to save file
+#' @param do_print A Bolean indicating if plot should be printed
+#' 
+#' @export
+#' 
+plot_neg <- function(input_frame_spot, file_name, save_path, do_print = FALSE) {
+  
+  input_frame_spot_tmp <- input_frame_spot %>% 
+    filter(value < 0)
+  
+  p <- ggplot(input_frame_spot, aes(x = date_time, y = value)) +
+    geom_line(color = "#003366") +
+    geom_point(data = input_frame_spot_tmp, aes(x = date_time, y = value),
+               colour = "#E4001B", shape = 1, size = 3) +
+    geom_hline(aes(yintercept = 0),
+               colour = "#E4001B") +
+    xlab("Time") +
+    ylab("Price, EUR/MWh") +
+    ggtitle("EEX day-ahead price") +
+    theme(axis.line = element_line(colour = "#E0E0DF"),
+          axis.line.y = element_blank(),
+          axis.title.x = element_text(colour = "#656560"),
+          axis.title.y = element_text(colour = "#656560"),
+          panel.grid.major.x = element_blank(),
+          panel.grid.minor.x = element_blank(),
+          panel.grid.major.y = element_line(colour = "#E0E0DF"),
+          panel.grid.minor.y = element_line(colour = "#E0E0DF"),
+          panel.background = element_blank(),
+          legend.position = "bottom",
+          legend.key = element_blank())
+  
+  # Print plot
+  if (do_print == TRUE) print(p)
+  
+  # Possibly save graphs
+  if (!is.null(save_path) && !is.null(file_name)) {
+    ggsave(filename = file_name,
+           plot = p,
+           path = save_path,
+           scale = 1,
+           width = 21,
+           height = 29.7 * 0.5 * 0.5,
            units = "cm",
            dpi = 1000)
   }

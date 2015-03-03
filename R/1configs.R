@@ -10,6 +10,14 @@ ewma <- function() {
   .Call("ewma", PACKAGE = "powerfor")
 }
 
+loglik_a <- function() {
+  .Call("loglik_a", PACKAGE = "powerfor")
+}
+
+loglik_a_sim <- function() {
+  .Call("loglik_a_sim", PACKAGE = "powerfor")
+}
+
 # library(svmfortopic)
 # library(magrittr)
 # library(dplyr)

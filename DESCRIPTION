@@ -9,7 +9,9 @@ Maintainer: Andreas Keller Leth Laursen. <andreas.keller@gmail.com>
 Description: Provides all code for the thesis An Empirical Comparison of Models
     for Forecasting Electricity Prices by Andreas Keller Leth Laursen. All code
     written by the author.
-LinkingTo: Rcpp
+LinkingTo:
+    Rcpp,
+    RcppArmadillo,
 Imports: 
     magrittr,
     rvest,
@@ -25,5 +27,6 @@ Imports:
     rugarch,
     parallel,
     Rcpp,
+    RcppArmadillo,
     tidyr
 License: file LICENCE

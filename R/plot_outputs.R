@@ -12,6 +12,7 @@ power_characteristics <- function(input_frame_spot,
                                   save_path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Child Documents/A_Brief_Overview_of_Electricity_Markets/Figures",
                                   do_print = FALSE) {
   
+  input_frame_spot_long <- input_frame_spot
   input_frame_spot %<>% filter(date >= "2010-12-01")
   
   trend_seas_fit_spot <- long_run_trend_season(input_frame_spot)
@@ -43,7 +44,7 @@ power_characteristics <- function(input_frame_spot,
   plot_lrts(trend_seas_est_spot, trend_seas_est_intraday,
             file_name = "2_3_seasonalities.eps",
             save_path,
-            do_print = TRUE)
+            do_print = do_print)
   
   date_vec <- seq("2014-08-04" %>% as.POSIXct,
                   "2014-08-11" %>% as.POSIXct,
@@ -56,13 +57,22 @@ power_characteristics <- function(input_frame_spot,
              filter(date_time %in% date_vec & Series == "Intraday price"),
            file_name = "2_3_seasonalities_short.eps",
            save_path,
-           do_print = TRUE)
+           do_print = do_print)
   
   plot_spike(trend_seas_est_spot %>% filter(Series == "Day ahead price"),
              trend_seas_est_intraday %>% filter(Series == "Intraday price"),
              file_name = "2_3_spikes.eps",
              save_path,
-             do_print = TRUE)
+             do_print = do_print)
+  
+  input_frame_spot_long %<>% transmute(hour = rep(1:24, n() / 24),
+                                       date_time = date %>% as.POSIXct(tz = "Copenhagen") %>% `+`((hour - 1) * 3600),
+                                       value = price)
+  
+  plot_neg(input_frame_spot_long,
+           file_name = "2_3_negatives.eps",
+           save_path,
+           do_print = do_print)
   
 }
 

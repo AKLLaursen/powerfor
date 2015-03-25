@@ -28,3 +28,21 @@ loglik_a_sim <- function(theta, price, week_dum) {
     .Call('powerfor_loglik_a_sim', PACKAGE = 'powerfor', theta, price, week_dum)
 }
 
+#' Loglikelihood function for Escribano2012 model b
+#' @param theta A parameter vector
+#' @param price A price vector
+#' @param week_dum A week dummy matrix
+#' @export
+loglik_a_sim_sum <- function(theta, price, week_dum) {
+    .Call('powerfor_loglik_a_sim_sum', PACKAGE = 'powerfor', theta, price, week_dum)
+}
+
+#' Loglikelihood function for Escribano2012 model b
+#' @param theta A parameter vector
+#' @param price A price vector
+#' @param week_dum A week dummy matrix
+#' @export
+loglik_a_sim_sum_neg <- function(theta, price, week_dum) {
+    .Call('powerfor_loglik_a_sim_sum_neg', PACKAGE = 'powerfor', theta, price, week_dum)
+}
+

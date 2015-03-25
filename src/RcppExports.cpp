@@ -7,52 +7,66 @@
 using namespace Rcpp;
 
 // ewma
-NumericVector ewma(NumericVector x, double lambda = 0.975);
+NumericVector ewma(NumericVector x, double lambda);
 RcppExport SEXP powerfor_ewma(SEXP xSEXP, SEXP lambdaSEXP) {
 BEGIN_RCPP
-    SEXP __sexp_result;
-    {
-        Rcpp::RNGScope __rngScope;
-        Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP );
-        Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP );
-        NumericVector __result = ewma(x, lambda);
-        PROTECT(__sexp_result = Rcpp::wrap(__result));
-    }
-    UNPROTECT(1);
-    return __sexp_result;
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    __result = Rcpp::wrap(ewma(x, lambda));
+    return __result;
 END_RCPP
 }
 // loglik_a
 double loglik_a(arma::vec theta, arma::vec price, arma::mat week_dum);
 RcppExport SEXP powerfor_loglik_a(SEXP thetaSEXP, SEXP priceSEXP, SEXP week_dumSEXP) {
 BEGIN_RCPP
-    SEXP __sexp_result;
-    {
-        Rcpp::RNGScope __rngScope;
-        Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP );
-        Rcpp::traits::input_parameter< arma::vec >::type price(priceSEXP );
-        Rcpp::traits::input_parameter< arma::mat >::type week_dum(week_dumSEXP );
-        double __result = loglik_a(theta, price, week_dum);
-        PROTECT(__sexp_result = Rcpp::wrap(__result));
-    }
-    UNPROTECT(1);
-    return __sexp_result;
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type price(priceSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type week_dum(week_dumSEXP);
+    __result = Rcpp::wrap(loglik_a(theta, price, week_dum));
+    return __result;
 END_RCPP
 }
 // loglik_a_sim
 arma::vec loglik_a_sim(arma::vec theta, arma::vec price, arma::vec week_dum);
 RcppExport SEXP powerfor_loglik_a_sim(SEXP thetaSEXP, SEXP priceSEXP, SEXP week_dumSEXP) {
 BEGIN_RCPP
-    SEXP __sexp_result;
-    {
-        Rcpp::RNGScope __rngScope;
-        Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP );
-        Rcpp::traits::input_parameter< arma::vec >::type price(priceSEXP );
-        Rcpp::traits::input_parameter< arma::vec >::type week_dum(week_dumSEXP );
-        arma::vec __result = loglik_a_sim(theta, price, week_dum);
-        PROTECT(__sexp_result = Rcpp::wrap(__result));
-    }
-    UNPROTECT(1);
-    return __sexp_result;
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type price(priceSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type week_dum(week_dumSEXP);
+    __result = Rcpp::wrap(loglik_a_sim(theta, price, week_dum));
+    return __result;
+END_RCPP
+}
+// loglik_a_sim_sum
+double loglik_a_sim_sum(arma::vec theta, arma::vec price, arma::vec week_dum);
+RcppExport SEXP powerfor_loglik_a_sim_sum(SEXP thetaSEXP, SEXP priceSEXP, SEXP week_dumSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type price(priceSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type week_dum(week_dumSEXP);
+    __result = Rcpp::wrap(loglik_a_sim_sum(theta, price, week_dum));
+    return __result;
+END_RCPP
+}
+// loglik_a_sim_sum_neg
+double loglik_a_sim_sum_neg(arma::vec theta, arma::vec price, arma::vec week_dum);
+RcppExport SEXP powerfor_loglik_a_sim_sum_neg(SEXP thetaSEXP, SEXP priceSEXP, SEXP week_dumSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type price(priceSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type week_dum(week_dumSEXP);
+    __result = Rcpp::wrap(loglik_a_sim_sum_neg(theta, price, week_dum));
+    return __result;
 END_RCPP
 }

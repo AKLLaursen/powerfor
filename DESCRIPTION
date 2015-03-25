@@ -28,5 +28,7 @@ Imports:
     parallel,
     Rcpp,
     RcppArmadillo,
-    tidyr
+    tidyr,
+    httr,
+    jsonlite
 License: file LICENCE

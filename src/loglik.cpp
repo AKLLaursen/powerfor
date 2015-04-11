@@ -142,13 +142,13 @@ double loglik_a_sim_sum(arma::vec theta, arma::vec price, arma::vec week_dum) {
   
   int n = price.size();
   
-  double B0 = theta[0];
-  double BT = theta[1];
-  double C1 = theta[2];
-  double C2 = theta[3];
-  double C3 = theta[4];
-  double C4 = theta[5];
-  double  D1 = theta[6];
+  double kappa_0 = theta[0];
+  double kappa_1 = theta[1];
+  double kappa_2 = theta[2];
+  double kappa_3 = theta[3];
+  double kappa_4 = theta[4];
+  double kappa_5 = theta[5];
+  double kappa_6 = theta[6];
   
   arma::vec phi = theta(arma::span(7, 13));
   
@@ -165,8 +165,10 @@ double loglik_a_sim_sum(arma::vec theta, arma::vec price, arma::vec week_dum) {
     t[i] = i + 1;
   }
   
-  arma::vec s = B0 + BT * t + C1 * sin((t + C2) * 2 * datum::pi / 365) +
-    C3 * sin((t + C4) * 4 * datum::pi / 365) + D1 * week_dum;
+  arma::vec s = kappa_0 + kappa_1 * t +
+    kappa_2 * sin((t + kappa_3) * 2 * datum::pi / 365) +
+    kappa_4 * sin((t + kappa_5) * 4 * datum::pi / 365) +
+    kappa_6 * week_dum;
   
   arma::vec x = price - s;
   
@@ -174,20 +176,20 @@ double loglik_a_sim_sum(arma::vec theta, arma::vec price, arma::vec week_dum) {
   arma::vec h = arma::zeros<vec>(n);
   h[6] = omega;
   arma::vec e = arma::zeros<vec>(n);
-  arma::vec e_1 = arma::zeros<vec>(n);
-  arma::vec e_2 = arma::zeros<vec>(n);
   
   double part_1 = 0;
   double part_2 = 0;
+  double e_1 = 0;
+  double e_2 = 0;
   
   arma::vec log_l = arma::zeros<vec>(n);
   
   for (int j = 7; j < n; j++) {
     x_sum[j] = arma::as_scalar(phi.t() * x(arma::span(j - 7, j - 1)));
     h[j] = omega + alpha * pow(e[j - 1], 2) + beta * h[j - 1];
-    e_1[j] = (x[j] / (1 - lambda) - x_sum[j]) / sqrt(h[j]);
-    e_2[j] = (x[j] / lambda - x_sum[j] - sqrt(h[j]) * e_1[j] - mu) / sigma;
-    e[j] = (1 - lambda) * e_1[j] + lambda * e_2[j];
+    e_1 = (x[j] / (1 - lambda) - x_sum[j]) / sqrt(h[j]);
+    e_2 = (x[j] / lambda - x_sum[j] - sqrt(h[j]) * e_1 - mu) / sigma;
+    e[j] = (1 - lambda) * e_1 + lambda * e_2;
     
     part_1 = exp(-pow(price[j] - s[j] - x_sum[j] - mu, 2) /
                    (2 * (h[j] + pow(sigma, 2)))) *
@@ -197,7 +199,7 @@ double loglik_a_sim_sum(arma::vec theta, arma::vec price, arma::vec week_dum) {
     log_l[j] = log(lambda * part_1 + (1 - lambda) * part_2);
   }
   
-  double sum_log_l = arma::sum(log_l);
+  double sum_log_l = - arma::sum(log_l);
   
   return sum_log_l;
 }

@@ -412,3 +412,116 @@ plot_neg <- function(input_frame_spot, file_name, save_path, do_print = FALSE) {
            dpi = 1000)
   }
 }
+
+#' @export
+plot_escribiano_seasonality <- function(input_frame_s, input_frame_i,
+                                        save_path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Figures",
+                                        country = "de") {
+  
+  set_date_time()
+  
+  input_frame_s %<>%
+    filter(date < "2013-01-01") %>%
+    group_by(date) %>%
+    summarise(price = mean(price, na.rm = TRUE)) %>%
+    ungroup
+  
+  input_frame_i %<>%
+    filter(date < "2013-01-01") %>%
+    group_by(date) %>%
+    summarise(price = mean(price, na.rm = TRUE)) %>%
+    ungroup
+  
+  trend_seas_fit_s <- seasonal_filter(input_frame_s)
+  deseason_data_frame_s <- input_frame_s %>% 
+    transmute(date,
+              trend = 1:n(),
+              dum_week = ifelse(format(date, "%a") == "Sat" | 
+                                  format(date, "%a") == "Sun", 0, 1),
+              price = price -
+                (trend_seas_fit_s[1] + trend_seas_fit_s[2] * trend +
+                   trend_seas_fit_s[3]  * sin((trend + trend_seas_fit_s[4])
+                                              * 2 * pi / 365) +
+                   trend_seas_fit_s[5] * sin((trend + trend_seas_fit_s[6])
+                                             * 4 * pi / 365) +
+                   trend_seas_fit_s[7] * dum_week),
+              trend_seas = (trend_seas_fit_s[1] + trend_seas_fit_s[2] * trend +
+                              trend_seas_fit_s[3]  * sin((trend + trend_seas_fit_s[4])
+                                                         * 2 * pi / 365) +
+                              trend_seas_fit_s[5] * sin((trend + trend_seas_fit_s[6])
+                                                        * 4 * pi / 365) +
+                              trend_seas_fit_s[7] * dum_week)) %>%
+    select(-trend)
+  
+  trend_seas_fit_i <- seasonal_filter(input_frame_i)
+  deseason_data_frame_i <- input_frame_i %>% 
+    transmute(date,
+              trend = 1:n(),
+              dum_week = ifelse(format(date, "%a") == "Sat" | 
+                                  format(date, "%a") == "Sun", 0, 1),
+              price = price -
+                (trend_seas_fit_i[1] + trend_seas_fit_i[2] * trend +
+                   trend_seas_fit_i[3]  * sin((trend + trend_seas_fit_i[4])
+                                              * 2 * pi / 365) +
+                   trend_seas_fit_i[5] * sin((trend + trend_seas_fit_i[6])
+                                             * 4 * pi / 365) +
+                   trend_seas_fit_i[7] * dum_week),
+              trend_seas = (trend_seas_fit_i[1] + trend_seas_fit_i[2] * trend +
+                              trend_seas_fit_i[3]  * sin((trend + trend_seas_fit_i[4])
+                                                         * 2 * pi / 365) +
+                              trend_seas_fit_i[5] * sin((trend + trend_seas_fit_i[6])
+                                                        * 4 * pi / 365) +
+                              trend_seas_fit_i[7] * dum_week)) %>%
+    select(-trend)
+  
+  plots <- list(
+    p1 = ggplot(deseason_data_frame_s,
+                aes(x = date, y = trend_seas)) +
+      geom_line(color = "#003366") +
+      xlab("Time") +
+      ylab("Price, EUR/MWh") +
+      ggtitle("EEX day-ahead seasonality") +
+      theme(axis.line = element_line(colour = "#E0E0DF"),
+            axis.line.y = element_blank(),
+            axis.title.x = element_text(colour = "#656560"),
+            axis.title.y = element_text(colour = "#656560"),
+            panel.grid.major.x = element_blank(),
+            panel.grid.minor.x = element_blank(),
+            panel.grid.major.y = element_line(colour = "#E0E0DF"),
+            panel.grid.minor.y = element_line(colour = "#E0E0DF"),
+            panel.background = element_blank(),
+            legend.position = "bottom",
+            legend.key = element_blank()),
+    p2 = ggplot(deseason_data_frame_i,
+                aes(x = date, y = trend_seas)) +
+      geom_line(color = "#003366") +
+      xlab("Time") +
+      ylab("Price, EUR/MWh") +
+      ggtitle("EEX intraday seasonality") +
+      theme(axis.line = element_line(colour = "#E0E0DF"),
+            axis.line.y = element_blank(),
+            axis.title.x = element_text(colour = "#656560"),
+            axis.title.y = element_text(colour = "#656560"),
+            panel.grid.major.x = element_blank(),
+            panel.grid.minor.x = element_blank(),
+            panel.grid.major.y = element_line(colour = "#E0E0DF"),
+            panel.grid.minor.y = element_line(colour = "#E0E0DF"),
+            panel.background = element_blank(),
+            legend.position = "bottom",
+            legend.key = element_blank())
+  )
+  
+  p <- arrangeGrob(plots$p1, plots$p2, nrow = 2)
+  
+  # Possibly save graphs
+  if (!is.null(save_path)) {
+    ggsave(filename = paste0(country, "_escribano_season.eps"),
+           plot = p,
+           path = save_path,
+           scale = 1,
+           width = 21,
+           height = 29.7 * 0.5,
+           units = "cm",
+           dpi = 1000)
+  }
+}

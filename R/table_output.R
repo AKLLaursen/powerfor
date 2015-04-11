@@ -1,4 +1,103 @@
 #' @export
+seasonal_filter_fit <- function(input_frame_s, input_frame_i,
+                                path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                                country = "de") {
+  
+  set_date_time()
+  
+  input_frame_s %<>%
+    filter(date < "2013-01-01") %>%
+    group_by(date) %>%
+    summarise(price = mean(price, na.rm = TRUE)) %>%
+    ungroup %>%
+    transmute(price,
+              trend = 1:n(),
+              dum_week = ifelse(format(date, "%a") == "Sat" | 
+                                  format(date, "%a") == "Sun", 0, 1))
+  
+  input_frame_i %<>%
+    filter(date < "2013-01-01") %>%
+    group_by(date) %>%
+    summarise(price = mean(price, na.rm = TRUE)) %>%
+    ungroup %>%
+    transmute(price,
+              trend = 1:n(),
+              dum_week = ifelse(format(date, "%a") == "Sat" | 
+                                  format(date, "%a") == "Sun", 0, 1))
+  
+  out_s <- nls(price ~ (k0 + k1 * trend + k2  * sin((trend + k3) * 2 * pi / 365) + 
+                        k4 * sin((trend + k5) * 4 * pi / 365) + k6 * dum_week),
+             data = input_frame_s,
+             start = list(
+               k0 = 1,
+               k1 = 1,
+               k2 = 1,
+               k3 = 1,
+               k4 = 1,
+               k5 = 1,
+               k6 = 1),
+             trace = TRUE,
+             control = list(
+               maxiter = 5000,
+               tol = 1e-08,
+               printEval = TRUE)) %>%
+    tidy %>%
+    transmute(Parameter = term,
+              Estimate = estimate %>% round(4),
+              Std.Error = std.error %>% round(4),
+              t.statistic = (Estimate / Std.Error) %>% round(4),
+              p.value = 2 * pt(abs(t.statistic),
+                               nrow(input_frame_s) - n() - 1,
+                               lower = FALSE) %>% round(4)) %>% 
+    mutate(Parameter = ifelse(grepl("k", Parameter), paste0("$\\", gsub("k", "kappa_", Parameter), "$"), NA)) %>%
+    mutate(Parameter = ifelse(p.value < 0.01, paste0(Parameter, "*"),
+                              ifelse(0.01 <= p.value & p.value < 0.05, paste0(Parameter, "**"),
+                                     ifelse(0.05 <= p.value & p.value < 0.1, paste0(Parameter, "***"), paste0(Parameter, "")))))
+  
+  out_i <- nls(price ~ (k0 + k1 * trend + k2  * sin((trend + k3) * 2 * pi / 365) + 
+                          k4 * sin((trend + k5) * 4 * pi / 365) + k6 * dum_week),
+               data = input_frame_i,
+               start = list(
+                 k0 = 0.1,
+                 k1 = 0.1,
+                 k2 = 0.1,
+                 k3 = 0.1,
+                 k4 = 0.1,
+                 k5 = 0.1,
+                 k6 = 0.1),
+               trace = TRUE,
+               control = list(
+                 maxiter = 5000,
+                 tol = 1e-08,
+                 printEval = TRUE)) %>%
+    tidy %>%
+    transmute(Parameter = term,
+              Estimate = estimate %>% round(4),
+              Std.Error = std.error %>% round(4),
+              t.statistic = (Estimate / Std.Error) %>% round(4),
+              p.value = 2 * pt(abs(t.statistic),
+                               nrow(input_frame_s) - n() - 1,
+                               lower = FALSE) %>% round(4)) %>% 
+    mutate(Parameter = ifelse(grepl("k", Parameter), paste0("$\\", gsub("k", "kappa_", Parameter), "$"), NA)) %>%
+    mutate(Parameter = ifelse(p.value < 0.01, paste0(Parameter, "*"),
+                              ifelse(0.01 <= p.value & p.value < 0.05, paste0(Parameter, "**"),
+                                     ifelse(0.05 <= p.value & p.value < 0.1, paste0(Parameter, "***"), paste0(Parameter, "")))))
+  
+  out <- rbind(out_s, out_i)
+  
+  if (!is.null(path)) {
+    xtable(out,
+           digits = 4) %>%
+      print(type = "latex",
+            file = paste0(path, "/", country, "_fit_season.tex"),
+            floating = FALSE,
+            sanitize.text.function = function(x){x},
+            include.rownames = FALSE)
+  }
+}
+  
+  
+#' @export
 ar_model_bic <- function(input_frame_s, input_frame_i, max.p = 7,
                      path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
                      country = "de") {
@@ -84,7 +183,7 @@ ar_model_fit <- function(input_frame_s, input_frame_i,
                                      ifelse(0.05 <= p.value & p.value < 0.1, paste0(Parameter, "***"), paste0(Parameter, "")))))
   
   arma_model_i <- arima(input_frame_i$price,
-                        order = if (country == "de") c(3, 0, 0) else c(1, 0, 0),
+                        order = c(7, 0, 0),
                         optim.control = list(maxit = 2000)) %>%
     tidy %>%
     {
@@ -558,27 +657,20 @@ garch_model_bic <- function(input_frame_s, input_frame_i, max.p = 7, max.q = 7,
     pre_model_processing()
   
   arima_start_val_s <- arima(input_frame_s$price,
-                             order = c(7, 0, 6),
+                             order = c(7, 0, 0),
                              optim.control = list(maxit = 2000)) %>%
     coef %>%
     as.list
   
-  names(arima_start_val_s) <- c("ar1", "ar2", "ar3", "ar4", "ar5", "ar6", "ar7", "ma1",
-                                "ma2", "ma3", "ma4", "ma5", "ma6", "mu")
+  names(arima_start_val_s) <- c("ar1", "ar2", "ar3", "ar4", "ar5", "ar6", "ar7", "mu")
   
   arima_start_val_i <- arima(input_frame_i$price,
-                             order = if (country == "de") c(7, 0, 7) else c(7, 0, 6),
+                             order = c(7, 0, 0),
                              optim.control = list(maxit = 2000)) %>%
     coef %>%
     as.list
   
-  if (country == "de") {
-    names(arima_start_val_i) <- c("ar1", "ar2", "ar3", "ar4", "ar5", "ar6", "ar7", "ma1",
-                                  "ma2", "ma3", "ma4", "ma5", "ma6", "ma7", "mu")
-  } else {
-    names(arima_start_val_i) <- c("ar1", "ar2", "ar3", "ar4", "ar5", "ar6", "ar7", "ma1",
-                                  "ma2", "ma3", "ma4", "ma5", "ma6", "mu")
-  }
+  names(arima_start_val_i) <- c("ar1", "ar2", "ar3", "ar4", "ar5", "ar6", "ar7", "mu")
   
   out_s <- lapply(1:max.p, function(p) {
     lapply(1:max.q, function(q) {
@@ -586,11 +678,12 @@ garch_model_bic <- function(input_frame_s, input_frame_i, max.p = 7, max.q = 7,
       model <- ugarchspec(
         variance.model = list(model = "sGARCH",
                               garchOrder = c(p, q)),
-        mean.model = list(armaOrder = c(7, 6)),
+        mean.model = list(armaOrder = c(7, 0)),
         start.pars = arima_start_val_s,
         distribution = "norm")
       ugarchfit(spec = model,
-                data = input_frame_s$price) %>%
+                data = input_frame_s$price,
+                solver = "nloptr") %>%
         infocriteria %>% 
         as.data.frame %>%
         add_rownames %>% 
@@ -611,12 +704,12 @@ garch_model_bic <- function(input_frame_s, input_frame_i, max.p = 7, max.q = 7,
       model <- ugarchspec(
         variance.model = list(model = "sGARCH",
                               garchOrder = c(p, q)),
-        mean.model = list(armaOrder = if (country == "de") c(7, 7) else c(7, 6)),
+        mean.model = list(armaOrder = c(7, 0)),
         start.pars = arima_start_val_i,
         distribution = "norm")
       ugarchfit(spec = model,
                 data = input_frame_i$price,
-                solver = "hybrid") %>%
+                solver = "nloptr") %>%
         infocriteria %>% 
         as.data.frame %>%
         add_rownames %>% 
@@ -657,42 +750,31 @@ garch_model_fit <- function(input_frame_s, input_frame_i,
     pre_model_processing()
   
   arima_start_val_s <- arima(input_frame_s$price,
-                             order = c(7, 0, 6),
+                             order = c(7, 0, 0),
                              optim.control = list(maxit = 2000)) %>%
     coef %>%
     as.list
   
-  names(arima_start_val_s) <- c("ar1", "ar2", "ar3", "ar4", "ar5", "ar6", "ar7", "ma1",
-                                "ma2", "ma3", "ma4", "ma5", "ma6", "mu")
+  names(arima_start_val_s) <- c("ar1", "ar2", "ar3", "ar4", "ar5", "ar6", "ar7", "mu")
   
   arima_start_val_i <- arima(input_frame_i$price,
-                             order = if (country == "de") c(7, 0, 7) else c(7, 0, 6),
+                             order = c(7, 0, 0),
                              optim.control = list(maxit = 2000)) %>%
     coef %>%
     as.list
   
-  if (country == "de") {
-    names(arima_start_val_i) <- c("ar1", "ar2", "ar3", "ar4", "ar5", "ar6", "ar7", "ma1",
-                                  "ma2", "ma3", "ma4", "ma5", "ma6", "ma7", "mu")
-  } else {
-    names(arima_start_val_i) <- c("ar1", "ar2", "ar3", "ar4", "ar5", "ar6", "ar7", "ma1",
-                                  "ma2", "ma3", "ma4", "ma5", "ma6", "mu")
-  }
+  names(arima_start_val_i) <- c("ar1", "ar2", "ar3", "ar4", "ar5", "ar6", "ar7", "mu")
   
   model_s <- ugarchspec(
     variance.model = list(model = "sGARCH",
                           garchOrder = c(1, 1)),
-    mean.model = list(armaOrder = c(7, 6)),
-    start.pars = arima_start_val_s,
+    mean.model = list(armaOrder = c(7, 0)),
+    # start.pars = arima_start_val_s,
     distribution = "norm")
   
   garch_model_s <- ugarchfit(spec = model_s,
                            data = input_frame_s$price,
-                           solver = "hybrid",
-                           solver.control = list(
-                             ftol_rel = 1e-10,
-                             xtol_rel = 1e-10)
-                           ) %>%
+                           solver = "nloptr") %>%
     `@`(fit) %>%
     `$`(matcoef) %>%
     as.data.frame %>%
@@ -717,20 +799,17 @@ garch_model_fit <- function(input_frame_s, input_frame_i,
   model_i <- ugarchspec(
     variance.model = list(model = "sGARCH",
                           garchOrder = c(1, 1)),
-    mean.model = list(armaOrder = if (country == "de") c(7, 7) else c(7, 6)),
+    mean.model = list(armaOrder = c(7, 0)),
     start.pars = arima_start_val_i,
     distribution = "norm")
   
   garch_model_i <- ugarchfit(spec = model_i,
                              data = input_frame_i$price,
-                             solver = "hybrid") %>%
+                             solver = "nloptr") %>%
     `@`(fit) %>%
     `$`(matcoef) %>%
     as.data.frame %>%
     add_rownames("Parameter") %>%
-    #     filter(!grepl("mu", Parameter),
-    #            !grepl("ar", Parameter),
-    #            !grepl("ma", Parameter)) %>%
     rename(Estimate = ` Estimate`,
            Std.Error = ` Std. Error`,
            t.value = ` t value`,
@@ -789,7 +868,8 @@ garch_model_exogen_bic_1 <- function(input_frame_s, input_frame_i, input_frame_e
                           external.regressors = input_frame_s$residual_load %>% as.matrix),
         distribution = "norm")
       ugarchfit(spec = model,
-                data = input_frame_s$price) %>%
+                data = input_frame_s$price,
+                solver = "nloptr") %>%
         infocriteria %>% 
         as.data.frame %>%
         add_rownames %>% 
@@ -815,7 +895,7 @@ garch_model_exogen_bic_1 <- function(input_frame_s, input_frame_i, input_frame_e
         distribution = "norm")
       ugarchfit(spec = model,
                 data = input_frame_i$price,
-                solver = "hybrid") %>%
+                solver = "nloptr") %>%
         infocriteria %>% 
         as.data.frame %>%
         add_rownames %>% 
@@ -844,7 +924,7 @@ garch_model_exogen_bic_1 <- function(input_frame_s, input_frame_i, input_frame_e
 }
 
 #' @export
-garch_model_exogen_fit_1 <- function(input_frame_s, input_frame_i,
+garch_model_exogen_fit_1 <- function(input_frame_s, input_frame_i, input_frame_exp,
                             path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
                             country = "de") {
   
@@ -872,7 +952,8 @@ garch_model_exogen_fit_1 <- function(input_frame_s, input_frame_i,
     distribution = "norm")
   
   garch_model_s <- ugarchfit(spec = model_s,
-                             data = input_frame_s$price) %>%
+                             data = input_frame_s$price,
+                             solver = "nloptr") %>%
     `@`(fit) %>%
     `$`(matcoef) %>%
     as.data.frame %>%
@@ -886,10 +967,11 @@ garch_model_exogen_fit_1 <- function(input_frame_s, input_frame_i,
            p.value = `Pr(>|t|)`) %>%
     mutate(Parameter = ifelse(Parameter == "omega", "$\\omega$",
                               ifelse(Parameter == "mu", "$\\phi_0$",
-                                     ifelse(grepl("alpha", Parameter), paste0("$\\", gsub("alpha", "alpha_", Parameter), "$"),
-                                            ifelse(grepl("beta", Parameter), paste0("$\\", gsub("beta", "beta_", Parameter), "$"),
-                                                   ifelse(grepl("ar", Parameter), paste0("$\\", gsub("ar", "phi_", Parameter), "$"),
-                                                          ifelse(grepl("ma", Parameter), paste0("$\\", gsub("ma", "theta_", Parameter), "$"), NA))))))) %>%
+                                     ifelse(Parameter == "mxreg1", "$\\eta_1$",
+                                           ifelse(grepl("alpha", Parameter), paste0("$\\", gsub("alpha", "alpha_", Parameter), "$"),
+                                                  ifelse(grepl("beta", Parameter), paste0("$\\", gsub("beta", "beta_", Parameter), "$"),
+                                                         ifelse(grepl("ar", Parameter), paste0("$\\", gsub("ar", "phi_", Parameter), "$"),
+                                                                ifelse(grepl("ma", Parameter), paste0("$\\", gsub("ma", "theta_", Parameter), "$"), NA)))))))) %>%
     mutate(Parameter = ifelse(p.value < 0.01, paste0(Parameter, "*"),
                               ifelse(0.01 <= p.value & p.value < 0.05, paste0(Parameter, "**"),
                                      ifelse(0.05 <= p.value & p.value < 0.1, paste0(Parameter, "***"), paste0(Parameter, "")))))
@@ -902,7 +984,8 @@ garch_model_exogen_fit_1 <- function(input_frame_s, input_frame_i,
     distribution = "norm")
   
   garch_model_i <- ugarchfit(spec = model_i,
-                             data = input_frame_i$price) %>%
+                             data = input_frame_i$price,
+                             solver = "nloptr") %>%
     `@`(fit) %>%
     `$`(matcoef) %>%
     as.data.frame %>%
@@ -916,10 +999,11 @@ garch_model_exogen_fit_1 <- function(input_frame_s, input_frame_i,
            p.value = `Pr(>|t|)`) %>%
     mutate(Parameter = ifelse(Parameter == "omega", "$\\omega$",
                               ifelse(Parameter == "mu", "$\\phi_0$",
-                                     ifelse(grepl("alpha", Parameter), paste0("$\\", gsub("alpha", "alpha_", Parameter), "$"),
-                                            ifelse(grepl("beta", Parameter), paste0("$\\", gsub("beta", "beta_", Parameter), "$"),
-                                                   ifelse(grepl("ar", Parameter), paste0("$\\", gsub("ar", "phi_", Parameter), "$"),
-                                                          ifelse(grepl("ma", Parameter), paste0("$\\", gsub("ma", "theta_", Parameter), "$"), NA))))))) %>%
+                                     ifelse(Parameter == "mxreg1", "$\\eta_1$",
+                                           ifelse(grepl("alpha", Parameter), paste0("$\\", gsub("alpha", "alpha_", Parameter), "$"),
+                                                  ifelse(grepl("beta", Parameter), paste0("$\\", gsub("beta", "beta_", Parameter), "$"),
+                                                         ifelse(grepl("ar", Parameter), paste0("$\\", gsub("ar", "phi_", Parameter), "$"),
+                                                                ifelse(grepl("ma", Parameter), paste0("$\\", gsub("ma", "theta_", Parameter), "$"), NA)))))))) %>%
     mutate(Parameter = ifelse(p.value < 0.01, paste0(Parameter, "*"),
                               ifelse(0.01 <= p.value & p.value < 0.05, paste0(Parameter, "**"),
                                      ifelse(0.05 <= p.value & p.value < 0.1, paste0(Parameter, "***"), paste0(Parameter, "")))))
@@ -930,7 +1014,197 @@ garch_model_exogen_fit_1 <- function(input_frame_s, input_frame_i,
     xtable(garch_model,
            digits = 4) %>%
       print(type = "latex",
-            file = paste0(path, "/", country, "_fit_garch.tex"),
+            file = paste0(path, "/", country, "_fit_garch_exo_1.tex"),
+            floating = FALSE,
+            sanitize.text.function = function(x){x},
+            include.rownames = FALSE)
+  }
+}
+
+#' @export
+garch_model_exogen_bic_2 <- function(input_frame_s, input_frame_i, input_frame_exp, max.p = 7, max.q = 7,
+                                     path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                                     country = "de") {
+  
+  input_frame_exp %<>%
+    filter(date < "2013-01-01") %>%
+    group_by(date) %>%
+    summarise(residual_load = mean(residual_load)) %>%
+    ungroup %>%
+    mutate(residual_load = (residual_load - mean(residual_load)) / sd(residual_load)) %>%
+    mutate(residual_load = residual_load - lag(residual_load, 1))
+  
+  input_frame_s %<>%
+    filter(date < "2013-01-01") %>%
+    pre_model_processing() %>%
+    left_join(input_frame_exp, by = c("date")) %>%
+    tail(-1)
+  input_frame_i %<>%
+    filter(date < "2013-01-01") %>%
+    pre_model_processing() %>%
+    left_join(input_frame_exp, by = c("date")) %>%
+    tail(-1)
+  
+  out_s <- lapply(1:max.p, function(p) {
+    lapply(1:max.q, function(q) {
+      cat(paste0("Estimating garch model with p ", p, " and q ", q, "\n"))
+      model <- ugarchspec(
+        variance.model = list(model = "sGARCH",
+                              garchOrder = c(p, q)),
+        mean.model = list(armaOrder = c(7, 0),
+                          external.regressors = input_frame_s$residual_load %>% as.matrix),
+        distribution = "norm")
+      ugarchfit(spec = model,
+                data = input_frame_s$price,
+                solver = "nloptr") %>%
+        infocriteria %>% 
+        as.data.frame %>%
+        add_rownames %>% 
+        transmute(info_crit = rowname,
+                  bic = V1,
+                  p = p,
+                  q = q) %>%
+        filter(info_crit == "Bayes")
+    }) %>% rbind_all
+  }) %>% rbind_all %>%
+    select(p, q, bic) %>%
+    rename(`p/q` = p) %>%
+    spread(q, bic)
+  
+  out_i <- lapply(1:max.p, function(p) {
+    lapply(1:max.q, function(q) {
+      cat(paste0("Estimating garch model with p ", p, " and q ", q, "\n"))
+      model <- ugarchspec(
+        variance.model = list(model = "sGARCH",
+                              garchOrder = c(p, q)),
+        mean.model = list(armaOrder = c(7, 0),
+                          external.regressors = input_frame_s$residual_load %>% as.matrix),
+        distribution = "norm")
+      ugarchfit(spec = model,
+                data = input_frame_i$price,
+                solver = "nloptr") %>%
+        infocriteria %>% 
+        as.data.frame %>%
+        add_rownames %>% 
+        transmute(info_crit = rowname,
+                  bic = V1,
+                  p = p,
+                  q = q) %>%
+        filter(info_crit == "Bayes") 
+    }) %>% rbind_all
+  }) %>% rbind_all %>%
+    select(p, q, bic) %>%
+    rename(`p/q` = p) %>%
+    spread(q, bic)
+  
+  out <- rbind(out_s, out_i)
+  
+  if (!is.null(path)) {
+    xtable(out,
+           digits = 4) %>%
+      print(type = "latex",
+            file = paste0(path, "/", country, "_bic_garch_exo_2.tex"),
+            floating = FALSE,
+            sanitize.text.function = function(x){x},
+            include.rownames = FALSE)
+  }
+}
+
+#' @export
+garch_model_exogen_fit_2 <- function(input_frame_s, input_frame_i, input_frame_exp,
+                                     path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                                     country = "de") {
+  
+  input_frame_exp %<>%
+    filter(date < "2013-01-01") %>%
+    group_by(date) %>%
+    summarise(residual_load = mean(residual_load)) %>%
+    ungroup %>%
+    mutate(residual_load = (residual_load - mean(residual_load)) / sd(residual_load)) %>%
+    mutate(residual_load = residual_load - lag(residual_load, 1))
+  
+  input_frame_s %<>%
+    filter(date < "2013-01-01") %>%
+    pre_model_processing() %>%
+    left_join(input_frame_exp, by = c("date")) %>%
+    tail(-1)
+  input_frame_i %<>%
+    filter(date < "2013-01-01") %>%
+    pre_model_processing() %>%
+    left_join(input_frame_exp, by = c("date")) %>%
+    tail(-1)
+  
+  model_s <- ugarchspec(
+    variance.model = list(model = "sGARCH",
+                          garchOrder = c(1, 1)),
+    mean.model = list(armaOrder = c(7, 0),
+                      external.regressors = input_frame_s$residual_load %>% as.matrix),
+    distribution = "norm")
+  
+  garch_model_s <- ugarchfit(spec = model_s,
+                             data = input_frame_s$price,
+                             solver = "nloptr") %>%
+    `@`(fit) %>%
+    `$`(matcoef) %>%
+    as.data.frame %>%
+    add_rownames("Parameter") %>%
+    #     filter(!grepl("mu", Parameter),
+    #            !grepl("ar", Parameter),
+    #            !grepl("ma", Parameter)) %>%
+    rename(Estimate = ` Estimate`,
+           Std.Error = ` Std. Error`,
+           t.value = ` t value`,
+           p.value = `Pr(>|t|)`) %>%
+    mutate(Parameter = ifelse(Parameter == "omega", "$\\omega$",
+                              ifelse(Parameter == "mu", "$\\phi_0$",
+                                     ifelse(Parameter == "mxreg1", "$\\eta_1$",
+                                            ifelse(grepl("alpha", Parameter), paste0("$\\", gsub("alpha", "alpha_", Parameter), "$"),
+                                                   ifelse(grepl("beta", Parameter), paste0("$\\", gsub("beta", "beta_", Parameter), "$"),
+                                                          ifelse(grepl("ar", Parameter), paste0("$\\", gsub("ar", "phi_", Parameter), "$"),
+                                                                 ifelse(grepl("ma", Parameter), paste0("$\\", gsub("ma", "theta_", Parameter), "$"), NA)))))))) %>%
+    mutate(Parameter = ifelse(p.value < 0.01, paste0(Parameter, "*"),
+                              ifelse(0.01 <= p.value & p.value < 0.05, paste0(Parameter, "**"),
+                                     ifelse(0.05 <= p.value & p.value < 0.1, paste0(Parameter, "***"), paste0(Parameter, "")))))
+  
+  model_i <- ugarchspec(
+    variance.model = list(model = "sGARCH",
+                          garchOrder = c(1, 1)),
+    mean.model = list(armaOrder = c(7, 0),
+                      external.regressors = input_frame_s$residual_load %>% as.matrix),
+    distribution = "norm")
+  
+  garch_model_i <- ugarchfit(spec = model_i,
+                             data = input_frame_i$price,
+                             solver = "nloptr") %>%
+    `@`(fit) %>%
+    `$`(matcoef) %>%
+    as.data.frame %>%
+    add_rownames("Parameter") %>%
+    #     filter(!grepl("mu", Parameter),
+    #            !grepl("ar", Parameter),
+    #            !grepl("ma", Parameter)) %>%
+    rename(Estimate = ` Estimate`,
+           Std.Error = ` Std. Error`,
+           t.value = ` t value`,
+           p.value = `Pr(>|t|)`) %>%
+    mutate(Parameter = ifelse(Parameter == "omega", "$\\omega$",
+                              ifelse(Parameter == "mu", "$\\phi_0$",
+                                     ifelse(Parameter == "mxreg1", "$\\eta_1$",
+                                            ifelse(grepl("alpha", Parameter), paste0("$\\", gsub("alpha", "alpha_", Parameter), "$"),
+                                                   ifelse(grepl("beta", Parameter), paste0("$\\", gsub("beta", "beta_", Parameter), "$"),
+                                                          ifelse(grepl("ar", Parameter), paste0("$\\", gsub("ar", "phi_", Parameter), "$"),
+                                                                 ifelse(grepl("ma", Parameter), paste0("$\\", gsub("ma", "theta_", Parameter), "$"), NA)))))))) %>%
+    mutate(Parameter = ifelse(p.value < 0.01, paste0(Parameter, "*"),
+                              ifelse(0.01 <= p.value & p.value < 0.05, paste0(Parameter, "**"),
+                                     ifelse(0.05 <= p.value & p.value < 0.1, paste0(Parameter, "***"), paste0(Parameter, "")))))
+  
+  garch_model <- rbind(garch_model_s, garch_model_i)
+  
+  if (!is.null(path)) {
+    xtable(garch_model,
+           digits = 4) %>%
+      print(type = "latex",
+            file = paste0(path, "/", country, "_fit_garch_exo_2.tex"),
             floating = FALSE,
             sanitize.text.function = function(x){x},
             include.rownames = FALSE)

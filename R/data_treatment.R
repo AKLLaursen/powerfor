@@ -163,7 +163,7 @@ seasonal_filter <- function(input_frame) {
              trace = TRUE,
              control = list(
                maxiter = 5000,
-               tol = 1e-08,
+               tol = 1e-07,
                printEval = TRUE)) %>%
     tidy %>%
     use_series(estimate)
@@ -200,4 +200,45 @@ pre_model_processing <- function(input_frame) {
     select(-trend)
   
   deseason_filtered_frame <- outlier_filt(deseason_data_frame, 3)
+}
+
+#' @export
+filter_only_outliers <- function(input_frame, std_filt = 3) {
+  set_date_time()
+  
+  data_frame <- input_frame %>%
+    group_by(date) %>%
+    summarise(price = mean(price, na.rm = TRUE)) %>%
+    ungroup
+  
+  trend_seas_fit <- seasonal_filter(data_frame)
+  deseason_data_frame <- data_frame %>% 
+    transmute(date,
+              trend = 1:n(),
+              dum_week = ifelse(format(date, "%a") == "Sat" | 
+                                  format(date, "%a") == "Sun", 0, 1),
+              price = price -
+                (trend_seas_fit[1] + trend_seas_fit[2] * trend +
+                   trend_seas_fit[3]  * sin((trend + trend_seas_fit[4])
+                                            * 2 * pi / 365) +
+                   trend_seas_fit[5] * sin((trend + trend_seas_fit[6])
+                                           * 4 * pi / 365) +
+                   trend_seas_fit[7] * dum_week),
+              trend_seas = (trend_seas_fit[1] + trend_seas_fit[2] * trend +
+                              trend_seas_fit[3]  * sin((trend + trend_seas_fit[4])
+                                                       * 2 * pi / 365) +
+                              trend_seas_fit[5] * sin((trend + trend_seas_fit[6])
+                                                      * 4 * pi / 365) +
+                              trend_seas_fit[7] * dum_week)) %>%
+    select(-trend)
+  
+  data_frame$price[which(deseason_data_frame$price >
+                      std_filt * sd(deseason_data_frame$price) |
+                        deseason_data_frame$price <
+                      - std_filt * sd(deseason_data_frame$price))] <- NA
+  
+  data_frame_out <- data_frame %>%
+    mutate(price = na_filter(price))
+  
+  return(data_frame_out)
 }

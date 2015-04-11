@@ -75,4 +75,3 @@ power_characteristics <- function(input_frame_spot,
            do_print = do_print)
   
 }
-

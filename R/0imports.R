@@ -6,7 +6,7 @@
 #' @importFrom dplyr rbind_all group_by ungroup summarise mutate n select filter 
 #'    transmute left_join add_rownames rename
 
-#' @importFrom tidyr gather
+#' @importFrom tidyr gather spread
 
 #' @importFrom broom tidy
 
@@ -14,7 +14,7 @@
 
 #' @importFrom ggplot2 ggplot geom_point scale_color_manual geom_abline ggsave 
 #'    stat_function geom_hline geom_vline annotate xlab ylab geom_line 
-#'    geom_segment aes_string aes ylim
+#'    geom_segment aes_string aes ylim ggtitle
 
 #' @importFrom gridExtra arrangeGrob
 
@@ -37,4 +37,6 @@
 #' @importFrom httr GET content add_headers
 
 #' @importFrom ensurer ensure_that ensures_that
+
+#' @importFrom R.matlab Matlab
 NULL

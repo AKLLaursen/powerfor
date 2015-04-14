@@ -20,9 +20,9 @@ log_lik_model_a <- function(input_frame_s, input_frame_i,
   tmp_file_s <- paste0(tempfile(), ".csv")
   tmp_file_i <- paste0(tempfile(), ".csv")
   
-  write.table(input_frame_s[, 2:3], tmp_file_s, sep = ",", row.names = FALSE,
+  write.table(input_frame_s[, 2:3] %>% round(4), tmp_file_s, sep = ",", row.names = FALSE,
               col.names = FALSE)
-  write.table(input_frame_i[, 2:3], tmp_file_i, sep = ",", row.names = FALSE,
+  write.table(input_frame_i[, 2:3] %>% round(4), tmp_file_i, sep = ",", row.names = FALSE,
               col.names = FALSE)
   
   Matlab$startServer()
@@ -107,7 +107,9 @@ log_lik_model_b <- function(input_frame_s, input_frame_i,
                                format(date, "%a") == "Sun", 0, 1),
            seas_1 = ifelse(as.numeric(format(date, "%m")) %in% c(9, 10, 11), 1, 0),
            seas_2 = ifelse(as.numeric(format(date, "%m")) %in% c(3, 4, 5), 1, 0),
-           seas_3 = ifelse(as.numeric(format(date, "%m")) %in% c(6, 7, 8), 1, 0))
+           seas_3 = ifelse(as.numeric(format(date, "%m")) %in% c(6, 7, 8), 1, 0)) %>%
+    left_join(input_frame_exp, by = c("date")) %>%
+    left_join(input_frame_exp_1, by = c("date"))
   
   input_frame_i %<>% 
     filter(date < "2013-01-01") %>%
@@ -116,7 +118,9 @@ log_lik_model_b <- function(input_frame_s, input_frame_i,
                                format(date, "%a") == "Sun", 0, 1),
            seas_1 = ifelse(as.numeric(format(date, "%m")) %in% c(9, 10, 11), 1, 0),
            seas_2 = ifelse(as.numeric(format(date, "%m")) %in% c(3, 4, 5), 1, 0),
-           seas_3 = ifelse(as.numeric(format(date, "%m")) %in% c(6, 7, 8), 1, 0))
+           seas_3 = ifelse(as.numeric(format(date, "%m")) %in% c(6, 7, 8), 1, 0)) %>%
+    left_join(input_frame_exp, by = c("date")) %>%
+    left_join(input_frame_exp_1, by = c("date"))
   
   tmp_file_s <- paste0(tempfile(), ".csv")
   tmp_file_i <- paste0(tempfile(), ".csv")
@@ -204,12 +208,13 @@ log_lik_model_c <- function(input_frame_s, input_frame_i,
                             path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
                             country = "de") {
   
-  input_frame_exp <- data_de_exogen %>% 
+  input_frame_exp %<>% 
     filter(date < "2013-01-01") %>%
     group_by(date) %>%
     summarise(residual_load = mean(residual_load)) %>%
     ungroup %>%
-    mutate(residual_load = (residual_load - mean(residual_load)) / sd(residual_load))
+    mutate(residual_load = (residual_load - mean(residual_load)) / sd(residual_load)) %>%
+    mutate(residual_load = residual_load - lag(residual_load, 1))
   
   data_frame <- data_de_spot %>%
     filter(date < "2013-01-01") %>%

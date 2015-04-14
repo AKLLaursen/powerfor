@@ -163,8 +163,9 @@ seasonal_filter <- function(input_frame) {
              trace = TRUE,
              control = list(
                maxiter = 5000,
-               tol = 1e-07,
-               printEval = TRUE)) %>%
+               tol = 1e-06,
+               printEval = TRUE,
+               warnOnly = TRUE)) %>%
     tidy %>%
     use_series(estimate)
 }

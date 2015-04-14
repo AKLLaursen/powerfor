@@ -769,7 +769,7 @@ garch_model_fit <- function(input_frame_s, input_frame_i,
     variance.model = list(model = "sGARCH",
                           garchOrder = c(1, 1)),
     mean.model = list(armaOrder = c(7, 0)),
-    # start.pars = arima_start_val_s,
+    start.pars = arima_start_val_s,
     distribution = "norm")
   
   garch_model_s <- ugarchfit(spec = model_s,
@@ -1205,6 +1205,164 @@ garch_model_exogen_fit_2 <- function(input_frame_s, input_frame_i, input_frame_e
            digits = 4) %>%
       print(type = "latex",
             file = paste0(path, "/", country, "_fit_garch_exo_2.tex"),
+            floating = FALSE,
+            sanitize.text.function = function(x){x},
+            include.rownames = FALSE)
+  }
+}
+
+#' Escribano model 1
+#'
+#'@export
+Escribano_1 <- function(path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                        country = "de") {
+  
+  input_s <- read.csv(sprintf("C:/git/r/powerfor/inst/matlab/log_lik_model_1/output/fit_model_1_%s_spot.csv", country),
+                      header = FALSE)
+  input_i <- read.csv(sprintf("C:/git/r/powerfor/inst/matlab/log_lik_model_1/output/fit_model_1_%s_intraday.csv", country),
+                      header = FALSE)
+  
+  out_s <- data.frame(Parameter = c("$\\kappa_0$", "$\\kappa_1$","$\\kappa_2$",
+                                    "$\\kappa_3$", "$\\kappa_4$", "$\\kappa_5$",
+                                    "$\\kappa_6$", "$\\phi_1$", "$\\phi_2$",
+                                    "$\\phi_3$", "$\\phi_4$", "$\\phi_5$",
+                                    "$\\phi_6$", "$\\phi_7$", "$\\omega$",
+                                    "$\\alpha$", "$\\beta$", "$\\lambda$",
+                                    "$\\mu$", "$\\sigma$"),
+                      Estimate = input_s[, 1],
+                      Std.Error = input_s[, 2]) %>%
+    mutate(t.statistic = Estimate / Std.Error,
+           p.value = (2 * pt(abs(t.statistic),
+                             nrow(input_frame_s) - length(mat_out$param.s) - 1,
+                             lower = FALSE)) %>% round(4))
+  
+  out_i <- data.frame(Parameter = c("$\\kappa_0$", "$\\kappa_1$","$\\kappa_2$",
+                                    "$\\kappa_3$", "$\\kappa_4$", "$\\kappa_5$",
+                                    "$\\kappa_6$", "$\\phi_1$", "$\\phi_2$",
+                                    "$\\phi_3$", "$\\phi_4$", "$\\phi_5$",
+                                    "$\\phi_6$", "$\\phi_7$", "$\\omega$",
+                                    "$\\alpha$", "$\\beta$", "$\\lambda$",
+                                    "$\\mu$", "$\\sigma$"),
+                      Estimate = input_i[, 1],
+                      Std.Error = input_i[, 2]) %>%
+    mutate(t.statistic = Estimate / Std.Error,
+           p.value = (2 * pt(abs(t.statistic),
+                             nrow(input_frame_i) - length(mat_out$param.i) - 1,
+                             lower = FALSE)) %>% round(4))
+  
+  out <- rbind(out_s, out_i)
+  
+  if (!is.null(path)) {
+    xtable(out,
+           digits = 4) %>%
+      print(type = "latex",
+            file = paste0(path, "/", country, "_escribano2012_a_fit.tex"),
+            floating = FALSE,
+            sanitize.text.function = function(x){x},
+            include.rownames = FALSE)
+  }
+}
+
+#' Escribano model 2
+#'
+#'@export
+Escribano_2 <- function(path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                        country = "de") {
+  
+  input_s <- read.csv(sprintf("C:/git/r/powerfor/inst/matlab/log_lik_model_2/output/fit_model_2_%s_spot.csv", country),
+                      header = FALSE)
+  input_i <- read.csv(sprintf("C:/git/r/powerfor/inst/matlab/log_lik_model_2/output/fit_model_2_%s_intraday.csv", country),
+                      header = FALSE)
+  
+  out_s <- data.frame(Parameter = c("$\\phi_1$", "$\\phi_2$",
+                                    "$\\phi_3$", "$\\phi_4$", "$\\phi_5$",
+                                    "$\\phi_6$", "$\\phi_7$", "$\\kappa_0$", "$\\kappa_1$","$\\kappa_2$",
+                                    "$\\kappa_3$", "$\\kappa_4$", "$\\kappa_5$",
+                                    "$\\kappa_6$", "$\\omega$",
+                                    "$\\alpha$", "$\\beta$", "$\\eta_1$",
+                                    "$\\eta_2$", "$\\eta_3$", "$\\eta_4$",
+                                    "$\\mu$", "$\\sigma$"),
+                      Estimate = input_s[, 1],
+                      Std.Error = input_s[, 2]) %>%
+    mutate(t.statistic = Estimate / Std.Error,
+           p.value = (2 * pt(abs(t.statistic),
+                             nrow(input_frame_s) - length(mat_out$param.s) - 1,
+                             lower = FALSE)) %>% round(4))
+  
+  out_i <- data.frame(Parameter = c("$\\phi_1$", "$\\phi_2$",
+                                    "$\\phi_3$", "$\\phi_4$", "$\\phi_5$",
+                                    "$\\phi_6$", "$\\phi_7$", "$\\kappa_0$", "$\\kappa_1$","$\\kappa_2$",
+                                    "$\\kappa_3$", "$\\kappa_4$", "$\\kappa_5$",
+                                    "$\\kappa_6$", "$\\omega$",
+                                    "$\\alpha$", "$\\beta$", "$\\eta_1$",
+                                    "$\\eta_2$", "$\\eta_3$", "$\\eta_4$",
+                                    "$\\mu$", "$\\sigma$"),
+                      Estimate = input_i[, 1],
+                      Std.Error = input_i[, 2]) %>%
+    mutate(t.statistic = Estimate / Std.Error,
+           p.value = (2 * pt(abs(t.statistic),
+                             nrow(input_frame_i) - length(mat_out$param.i) - 1,
+                             lower = FALSE)) %>% round(4))
+  
+  out <- rbind(out_s, out_i)
+  
+  if (!is.null(path)) {
+    xtable(out,
+           digits = 4) %>%
+      print(type = "latex",
+            file = paste0(path, "/", country, "_escribano2012_b_fit.tex"),
+            floating = FALSE,
+            sanitize.text.function = function(x){x},
+            include.rownames = FALSE)
+  }
+}
+
+#' Escribano model 3
+#'
+#'@export
+Escribano_3 <- function(path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                        country = "de") {
+  
+  input_s <- read.csv(sprintf("C:/git/r/powerfor/inst/matlab/log_lik_model_3/output/fit_model_3_%s_spot.csv", country),
+                      header = FALSE)
+  input_i <- read.csv(sprintf("C:/git/r/powerfor/inst/matlab/log_lik_model_3/output/fit_model_3_%s_intraday.csv", country),
+                      header = FALSE)
+  
+  out_s <- data.frame(Parameter = c("$\\kappa_0$", "$\\kappa_1$","$\\kappa_2$",
+                                    "$\\kappa_3$", "$\\kappa_4$", "$\\kappa_5$",
+                                    "$\\kappa_6$", "$\\phi_1$", "$\\phi_2$",
+                                    "$\\phi_3$", "$\\phi_4$", "$\\phi_5$",
+                                    "$\\phi_6$", "$\\phi_7$", "$\\omega$",
+                                    "$\\alpha$", "$\\beta$", "$\\gamma_1$",
+                                    "$\\gamma_2$", "$\\mu$", "$\\sigma$"),
+                      Estimate = input_s[, 1],
+                      Std.Error = input_s[, 2]) %>%
+    mutate(t.statistic = Estimate / Std.Error,
+           p.value = (2 * pt(abs(t.statistic),
+                             nrow(input_frame_s) - length(mat_out$param.s) - 1,
+                             lower = FALSE)) %>% round(4))
+  
+  out_i <- data.frame(Parameter = c("$\\kappa_0$", "$\\kappa_1$","$\\kappa_2$",
+                                    "$\\kappa_3$", "$\\kappa_4$", "$\\kappa_5$",
+                                    "$\\kappa_6$", "$\\phi_1$", "$\\phi_2$",
+                                    "$\\phi_3$", "$\\phi_4$", "$\\phi_5$",
+                                    "$\\phi_6$", "$\\phi_7$", "$\\omega$",
+                                    "$\\alpha$", "$\\beta$", "$\\gamma_1$",
+                                    "$\\gamma_2$", "$\\mu$", "$\\sigma$"),
+                      Estimate = input_i[, 1],
+                      Std.Error = input_i[, 2]) %>%
+    mutate(t.statistic = Estimate / Std.Error,
+           p.value = (2 * pt(abs(t.statistic),
+                             nrow(input_frame_i) - length(mat_out$param.i) - 1,
+                             lower = FALSE)) %>% round(4))
+  
+  out <- rbind(out_s, out_i)
+  
+  if (!is.null(path)) {
+    xtable(out,
+           digits = 4) %>%
+      print(type = "latex",
+            file = paste0(path, "/", country, "_escribano2012_c_fit.tex"),
             floating = FALSE,
             sanitize.text.function = function(x){x},
             include.rownames = FALSE)

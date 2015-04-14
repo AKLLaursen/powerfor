@@ -39,8 +39,8 @@ log_l = zeros(n, 1);
 h(7) = omega;
 
 for ii = 8:n
-    lambda = exp(gamma_1 + gamma_2 * residual_load) / ...
-        (1 + exp(gamma_1 + gamma_2 * residual_load));
+    lambda = exp(gamma_1 + gamma_2 * residual_load(ii)) / ...
+        (1 + exp(gamma_1 + gamma_2 * residual_load(ii)));
     for p = 1:7
         x_sum(ii) = x_sum(ii) + phi(p) * x(ii - p);
     end

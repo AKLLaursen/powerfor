@@ -1,3 +1,4 @@
+#' @export
 set_date_time <- function () {
   if (.Platform$OS.type == "windows") {
     Sys.setlocale("LC_TIME", "English")

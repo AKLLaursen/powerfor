@@ -1,4 +1,4 @@
-function [theta_hat, hessian] = optim_model_1(theta, input_matrix)
+function [theta_hat, hessian] = optim_model_3(theta, input_matrix, exo)
 
 [p, ~] = size(theta);
 
@@ -14,8 +14,7 @@ A(2, 16) = -1;
 A(3, 17) = -1;
 
 [theta_hat, ~, ~, ~, ~, ~, hessian] = fmincon(@(x) ... 
-    log_lik_model_1(x, input_matrix(:, 1), input_matrix(:, 2)), ...
+    log_lik_model_3(x, input_matrix(:, 1), input_matrix(:, 2), exo), ... 
     theta, A, b, [], [], [], [], [], options);
-
 end
 

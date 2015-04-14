@@ -26,7 +26,8 @@
 
 #' @importFrom e1071 svm
 
-#' @importFrom parallel mclapply
+#' @importFrom parallel parLapply makeCluster clusterExport clusterEvalQ
+#'    stopCluster
 
 #' @useDynLib powerfor
 

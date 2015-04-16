@@ -155,7 +155,7 @@ select_svm <- function(input_frame, input_frame_exp, kernel = "linear",
       }) %>% rbind_all
   }
   
-  print(paste("\nCluster calculations done at:",Sys.time()))
+  print(paste("\nCluster calculations done at:", Sys.time()))
   stopCluster(cl)
   
   return(svm_out)

@@ -226,7 +226,7 @@ oos_forecast_daily <- function(input_frame, input_frame_exp, test_start = "2013-
                       type = "eps-regression",
                       cost = cost,
                       epsilon = epsilon,
-                      cachesize = 4000) %>%
+                      cachesize = 500) %>%
         predict(newdata = svm_for_input) %>%
         as.numeric
     } else if (forecast_type == "svm_linearx_1") {
@@ -263,7 +263,7 @@ oos_forecast_daily <- function(input_frame, input_frame_exp, test_start = "2013-
                       type = "eps-regression",
                       cost = cost,
                       epsilon = epsilon,
-                      cachesize = 4000) %>%
+                      cachesize = 500) %>%
         predict(newdata = svm_for_input) %>%
         as.numeric
     } else if (forecast_type == "svm_linearx_2") {
@@ -300,7 +300,7 @@ oos_forecast_daily <- function(input_frame, input_frame_exp, test_start = "2013-
                       type = "eps-regression",
                       cost = cost,
                       epsilon = epsilon,
-                      cachesize = 4000) %>%
+                      cachesize = 500) %>%
         predict(newdata = svm_for_input) %>%
         as.numeric
     } else if (forecast_type == "svm_polynomial") {
@@ -333,9 +333,12 @@ oos_forecast_daily <- function(input_frame, input_frame_exp, test_start = "2013-
                       kernel = "polynomial",
                       scale = TRUE,
                       type = "eps-regression",
+                      degree = 2,
+                      gamma = 1,
+                      coef0 = 1,
                       cost = cost,
                       epsilon = epsilon,
-                      cachesize = 4000) %>%
+                      cachesize = 500) %>%
         predict(newdata = svm_for_input) %>%
         as.numeric
     } else if (forecast_type == "svm_polynomialx_1") {
@@ -370,9 +373,12 @@ oos_forecast_daily <- function(input_frame, input_frame_exp, test_start = "2013-
                       kernel = "polynomial",
                       scale = TRUE,
                       type = "eps-regression",
+                      degree = 2,
+                      gamma = 1,
+                      coef0 = 1,
                       cost = cost,
                       epsilon = epsilon,
-                      cachesize = 4000) %>%
+                      cachesize = 500) %>%
         predict(newdata = svm_for_input) %>%
         as.numeric
     } else if (forecast_type == "svm_polynomialx_2") {
@@ -407,9 +413,12 @@ oos_forecast_daily <- function(input_frame, input_frame_exp, test_start = "2013-
                       kernel = "polynomial",
                       scale = TRUE,
                       type = "eps-regression",
+                      degree = 2,
+                      gamma = 1,
+                      coef0 = 1,
                       cost = cost,
                       epsilon = epsilon,
-                      cachesize = 4000) %>%
+                      cachesize = 500) %>%
         predict(newdata = svm_for_input) %>%
         as.numeric
     }

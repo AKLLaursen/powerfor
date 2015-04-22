@@ -4,11 +4,22 @@ data_de_spot = csvread(sprintf('C:/git/r/powerfor/inst/csv/data_%s_spot.csv', co
 data_de_intraday = csvread(sprintf('C:/git/r/powerfor/inst/csv/data_%s_intraday.csv', country));
 
 theta_s = ones(23, 1) * 0.2;
-
-if strcmp(country, 'fr') == 1
-    theta_s(8) = mean(data_de_spot(:, 1));
-    theta_s(23) = 2;
-end
+theta_s(8) = mean(data_de_spot(:, 1));
+theta_s(23) = 2;
+% theta_s(1) = mean(data_de_spot(:, 1));
+% 
+% if strcmp(country, 'fr') == 1
+%     theta_s(8) = mean(data_de_spot(:, 1));
+%     theta_s(23) = 2;
+% end
+% 
+% [input_param, ~] = optim_model_1(theta_s, data_de_spot);
+% 
+% theta_s = ones(23, 1) * -1;
+% theta_s(1:7) = input_param(8:14);
+% theta_s(8:14) = input_param(1:7);
+% theta_s(15:17) = input_param(15:17);
+% theta_s(22:23) = input_param(19:20);
 
 [param_s, hessian_s] = optim_model_2(theta_s, data_de_spot);
 std_s = sqrt(diag(inv(hessian_s)));
@@ -26,7 +37,7 @@ if strcmp(country, 'de') == 1
     theta_i = ones(20, 1) * 0.2;
     theta_i(1) = mean(data_de_intraday(:, 1));
     theta_i(20) = 2;
-    [param_i, hessian_i] = optim_model_1(theta_i, data_de_intraday);
+    [param_i, ~] = optim_model_1(theta_i, data_de_intraday);
 
     theta_i = ones(23, 1) * 0.2;
     theta_i(1:7) = param_i(8:14);

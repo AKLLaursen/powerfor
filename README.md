@@ -1,7 +1,7 @@
 # `powerfor` An R Package for Electricity Forecast Comparison
 
 ## Introduction
-This package provides all code used in the master thesis entitled *An Empirical Comparison of Models for  Forecasting Electricity Prices* written by **Andreas Keller Leth Laursen**. All code is written and maintained by the same author. Due to time constraint, the code is a bit messy. Thus a torough description is given here.
+This package provides all code used in the master thesis entitled *An Empirical Comparison of Models for  Forecasting Electricity Prices* written by **Andreas Keller Leth Laursen**. All code is written and maintained by the same author. Due to time constraint, the code is a bit messy. Thus a thorough description is given here.
 
 ## Installation
 You can install `powerfor` from github using `devtools` by running:

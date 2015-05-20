@@ -89,7 +89,6 @@ oos_forecast_daily <- function(input_frame, input_frame_exp, test_start = "2013-
     } else if (forecast_type == "arx_1") {
       forecast <- arima(deseason_filtered_frame$price,
                         order = c(7, 0, 0),
-                        method = "ML",
                         xreg = tmp_input_frame$residual_load,
                         optim.control = list(maxit = 2000)) %>%
         predict(n.ahead = h,
@@ -97,6 +96,8 @@ oos_forecast_daily <- function(input_frame, input_frame_exp, test_start = "2013-
         use_series(pred) %>%
         as.numeric
     } else if (forecast_type == "arx_2") {
+      deseason_filtered_frame %<>% tail(-1)
+      tmp_input_frame %<>% tail(-1)
       forecast <- arima(deseason_filtered_frame$price,
                         order = c(7, 0, 0),
                         method = "ML",
@@ -108,20 +109,21 @@ oos_forecast_daily <- function(input_frame, input_frame_exp, test_start = "2013-
         as.numeric
     } else if (forecast_type == "garch") {
       forecast <- 
-        tryCatch({ugarchspec(variance.model = list(model = "sGARCH",
+        tryCatch({
+          ugarchspec(variance.model = list(model = "sGARCH",
                                                    garchOrder = c(1, 1)),
                              mean.model = list(armaOrder = c(7, 0)),
                              distribution = "norm") %>%
             ugarchfit(spec = .,
                       data = deseason_filtered_frame$price,
-                      solver = "nloptr") %>%
+                      solver = "hybrid",
+                      fit.control = list(
+                        stationarity = 0
+                      )) %>%
             ugarchforecast(fitORspec = .,
                            n.ahead = h) %>%
             fitted %>%
             as.numeric},
-            warning = function(w) {
-              "warning"
-            },
             error = function(e) {
               "error"
             }) %>%
@@ -143,15 +145,16 @@ oos_forecast_daily <- function(input_frame, input_frame_exp, test_start = "2013-
                              distribution = "norm") %>%
             ugarchfit(spec = .,
                       data = deseason_filtered_frame$price,
-                      solver = "nloptr") %>% 
+                      solver = "hybrid",
+                      fit.control = list(
+                        stationarity = 0
+                      )) %>% 
             ugarchforecast(fitORspec = .,
                            n.ahead = h,
-                           external.forecasts = list(tmp_forecast_frame$residual_load)) %>%
+                           external.forecasts = list(
+                             mregfor = tmp_forecast_frame$residual_load)) %>%
             fitted %>%
             as.numeric},
-              warning = function(w) {
-                "warning"
-              },
               error = function(e) {
                 "error"
               }) %>%
@@ -165,6 +168,8 @@ oos_forecast_daily <- function(input_frame, input_frame_exp, test_start = "2013-
             }
           }
     } else if (forecast_type == "garchx_2") {
+      deseason_filtered_frame %<>% tail(-1)
+      tmp_input_frame %<>% tail(-1)
       forecast <- 
         tryCatch({ugarchspec(variance.model = list(model = "sGARCH",
                                              garchOrder = c(1, 1)),
@@ -173,15 +178,16 @@ oos_forecast_daily <- function(input_frame, input_frame_exp, test_start = "2013-
                              distribution = "norm") %>%
             ugarchfit(spec = .,
                       data = deseason_filtered_frame$price,
-                      solver = "nloptr") %>%
+                      solver = "hybrid",
+                      fit.control = list(
+                        stationarity = 0
+                      )) %>%
             ugarchforecast(fitORspec = .,
                            n.ahead = h,
-                           external.forecasts = list(tmp_forecast_frame$diff_residual_load)) %>%
+                           external.forecasts = list(
+                             mregfor = tmp_forecast_frame$diff_residual_load)) %>%
             fitted %>%
             as.numeric},
-              warning = function(w) {
-                "warning"
-              },
               error = function(e) {
                 "error"
               }) %>%
@@ -266,6 +272,52 @@ oos_forecast_daily <- function(input_frame, input_frame_exp, test_start = "2013-
                       cachesize = 500) %>%
         predict(newdata = svm_for_input) %>%
         as.numeric
+    } else if (forecast_type == "svm_linearx_1_test") {
+      lm_coef <- lm(deseason_filtered_frame$price ~ tmp_input_frame$residual_load) %>%
+        tidy %>% 
+        use_series(estimate)
+      
+      input_series <- lm(deseason_filtered_frame$price ~ tmp_input_frame$residual_load) %>%
+        residuals %>%
+        as.matrix
+      
+      svm_input <- data.frame(y = input_series,
+                              x1 = lag(input_series, 1),
+                              x2 = lag(input_series, 2),
+                              x3 = lag(input_series, 3),
+                              x4 = lag(input_series, 4),
+                              x5 = lag(input_series, 5),
+                              x6 = lag(input_series, 6),
+                              x7 = lag(input_series, 7)) %>% 
+        tail(-7)
+      
+      svm_for_input <- data.frame(x1 = input_series,
+                                  x2 = lag(input_series, 1),
+                                  x3 = lag(input_series, 2),
+                                  x4 = lag(input_series, 3),
+                                  x5 = lag(input_series, 4),
+                                  x6 = lag(input_series, 5),
+                                  x7 = lag(input_series, 6)) %>%
+        tail(1)
+      
+      if (country == "de") {
+        if (market == "spot") epsilon = 0.6701 else epsilon = 0.7321
+      } else if (country == "fr") {
+        if (market == "spot") epsilon = 0.5726 else epsilon = 0.4478
+      }
+      
+      forecast <- svm(y ~ .,
+                      data = svm_input,
+                      kernel = "linear",
+                      scale = TRUE,
+                      type = "eps-regression",
+                      cost = cost,
+                      epsilon = epsilon,
+                      cachesize = 500) %>%
+        predict(newdata = svm_for_input) %>%
+        as.numeric
+      
+      forecast <- forecast + lm_coef[1] + lm_coef[2] * tmp_forecast_frame$residual_load
     } else if (forecast_type == "svm_linearx_2") {
       svm_input <- data.frame(y = deseason_filtered_frame$price,
                               x1 = lag(deseason_filtered_frame$price, 1),
@@ -454,17 +506,17 @@ oos_forecast_daily <- function(input_frame, input_frame_exp, test_start = "2013-
 #' @export
 oos_forecast_hourly <- function(input_frame, input_frame_exp, test_start = "2013-01-01", h = 1,
                                cores = 8L, forecast_type = "ar",
-                               market = "spot", country = "de", hour = 10) {
+                               market = "spot", country = "de", hour_seq = 10) {
   test_start %<>% as.Date
   
   input_frame_exp %<>%
-    filter(hour == hour) %>%
+    filter(hour == hour_seq) %>%
     mutate(residual_load = (residual_load - mean(residual_load)) / sd(residual_load),
            diff_residual_load = residual_load - lag(residual_load, 1))
   
   input_frame %<>%
     mutate(date = date %>% as.Date) %>%
-    filter(hour == hour) %>%
+    filter(hour == hour_seq) %>%
     left_join(input_frame_exp, by = c("date"))
   
   date_vec <- seq(test_start, tail(input_frame$date, 1), by = "day")
@@ -558,32 +610,33 @@ oos_forecast_hourly <- function(input_frame, input_frame_exp, test_start = "2013
         as.numeric
     } else if (forecast_type == "garch") {
       forecast <- 
-        tryCatch({ugarchspec(variance.model = list(model = "sGARCH",
-                                                   garchOrder = c(1, 1)),
-                             mean.model = list(armaOrder = c(7, 0)),
-                             distribution = "norm") %>%
+        tryCatch({
+          ugarchspec(variance.model = list(model = "sGARCH",
+                                           garchOrder = c(1, 1)),
+                     mean.model = list(armaOrder = c(7, 0)),
+                     distribution = "norm") %>%
             ugarchfit(spec = .,
                       data = deseason_filtered_frame$price,
-                      solver = "nloptr") %>%
+                      solver = "hybrid",
+                      fit.control = list(
+                        stationarity = 0
+                      )) %>%
             ugarchforecast(fitORspec = .,
                            n.ahead = h) %>%
             fitted %>%
             as.numeric},
-            warning = function(w) {
-              "warning"
-            },
-            error = function(e) {
-              "error"
-            }) %>%
-            {
-              if ((.) == "error") {
-                NA
-              } else if ((.) == "warning") {
-                NA
-              } else {
-                (.)
-              }
+          error = function(e) {
+            "error"
+          }) %>%
+          {
+            if ((.) == "error") {
+              NA
+            } else if ((.) == "warning") {
+              NA
+            } else {
+              (.)
             }
+          }
     } else if (forecast_type == "garchx_1") {
       forecast <- 
         tryCatch({ugarchspec(variance.model = list(model = "sGARCH",
@@ -593,15 +646,16 @@ oos_forecast_hourly <- function(input_frame, input_frame_exp, test_start = "2013
                              distribution = "norm") %>%
             ugarchfit(spec = .,
                       data = deseason_filtered_frame$price,
-                      solver = "nloptr") %>% 
+                      solver = "hybrid",
+                      fit.control = list(
+                        stationarity = 0
+                      )) %>% 
             ugarchforecast(fitORspec = .,
                            n.ahead = h,
-                           external.forecasts = list(tmp_forecast_frame$residual_load)) %>%
+                           external.forecasts = list(
+                             mregfor = tmp_forecast_frame$residual_load)) %>%
             fitted %>%
             as.numeric},
-            warning = function(w) {
-              "warning"
-            },
             error = function(e) {
               "error"
             }) %>%
@@ -615,6 +669,8 @@ oos_forecast_hourly <- function(input_frame, input_frame_exp, test_start = "2013
               }
             }
     } else if (forecast_type == "garchx_2") {
+      deseason_filtered_frame %<>% tail(-1)
+      tmp_input_frame %<>% tail(-1)
       forecast <- 
         tryCatch({ugarchspec(variance.model = list(model = "sGARCH",
                                                    garchOrder = c(1, 1)),
@@ -623,15 +679,16 @@ oos_forecast_hourly <- function(input_frame, input_frame_exp, test_start = "2013
                              distribution = "norm") %>%
             ugarchfit(spec = .,
                       data = deseason_filtered_frame$price,
-                      solver = "nloptr") %>%
+                      solver = "hybrid",
+                      fit.control = list(
+                        stationarity = 0
+                      )) %>%
             ugarchforecast(fitORspec = .,
                            n.ahead = h,
-                           external.forecasts = list(tmp_forecast_frame$diff_residual_load)) %>%
+                           external.forecasts = list(
+                             mregfor = tmp_forecast_frame$diff_residual_load)) %>%
             fitted %>%
             as.numeric},
-            warning = function(w) {
-              "warning"
-            },
             error = function(e) {
               "error"
             }) %>%
@@ -897,7 +954,7 @@ oos_forecast_hourly <- function(input_frame, input_frame_exp, test_start = "2013
   
   stopCluster(cl)
   
-  write.csv(fore_out, paste0("C:/git/r/powerfor/inst/forecasts/", hour, "_", 
+  write.csv(fore_out, paste0("C:/git/r/powerfor/inst/forecasts/", hour_seq, "_", 
                              country, "_",  market, "_forecast_", forecast_type,
                              ".csv"))
 }

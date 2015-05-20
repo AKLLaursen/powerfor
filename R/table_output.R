@@ -1,6 +1,6 @@
 #' @export
 seasonal_filter_fit <- function(input_frame_s, input_frame_i,
-                                path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                                path = NULL,
                                 country = "de") {
   
   set_date_time()
@@ -99,7 +99,7 @@ seasonal_filter_fit <- function(input_frame_s, input_frame_i,
   
 #' @export
 ar_model_bic <- function(input_frame_s, input_frame_i, max.p = 7,
-                     path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                     path = NULL,
                      country = "de") {
   input_frame_s %<>%
     filter(date < "2013-01-01") %>%
@@ -151,7 +151,7 @@ ar_model_bic <- function(input_frame_s, input_frame_i, max.p = 7,
 
 #' @export
 ar_model_fit <- function(input_frame_s, input_frame_i,
-                         path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                         path = NULL,
                          country = "de") {
   
   input_frame_s %<>%
@@ -218,7 +218,7 @@ ar_model_fit <- function(input_frame_s, input_frame_i,
 
 #' @export
 arma_model_bic <- function(input_frame_s, input_frame_i, max.p = 7, max.q = 7,
-                         path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                         path = NULL,
                          country = "de") {
   input_frame_s %<>%
     filter(date < "2013-01-01") %>%
@@ -281,7 +281,7 @@ arma_model_bic <- function(input_frame_s, input_frame_i, max.p = 7, max.q = 7,
 
 #' @export
 arma_model_fit <- function(input_frame_s, input_frame_i,
-                         path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                         path = NULL,
                          country = "de") {
   
   input_frame_s %<>%
@@ -348,7 +348,7 @@ arma_model_fit <- function(input_frame_s, input_frame_i,
 
 #' @export
 arx_1_model_bic <- function(input_frame_s, input_frame_i, input_frame_exp, max.p = 7,
-                           path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                           path = NULL,
                            country = "de") {
   input_frame_exp %<>%
     filter(date < "2013-01-01") %>%
@@ -412,7 +412,7 @@ arx_1_model_bic <- function(input_frame_s, input_frame_i, input_frame_exp, max.p
 
 #' @export
 arx_1_model_fit <- function(input_frame_s, input_frame_i, input_frame_exp,
-                           path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                           path = NULL,
                            country = "de") {
   
   input_frame_exp %<>%
@@ -494,7 +494,7 @@ arx_1_model_fit <- function(input_frame_s, input_frame_i, input_frame_exp,
 
 #' @export
 arx_2_model_bic <- function(input_frame_s, input_frame_i, input_frame_exp, max.p = 7,
-                            path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                            path = NULL,
                             country = "de") {
   input_frame_exp %<>%
     filter(date < "2013-01-01") %>%
@@ -561,7 +561,7 @@ arx_2_model_bic <- function(input_frame_s, input_frame_i, input_frame_exp, max.p
 
 #' @export
 arx_2_model_fit <- function(input_frame_s, input_frame_i, input_frame_exp,
-                            path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                            path = NULL,
                             country = "de") {
   
   input_frame_exp %<>%
@@ -646,7 +646,7 @@ arx_2_model_fit <- function(input_frame_s, input_frame_i, input_frame_exp,
 
 #' @export
 garch_model_bic <- function(input_frame_s, input_frame_i, max.p = 7, max.q = 7,
-                            path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                            path = NULL,
                             country = "de") {
   
   input_frame_s %<>%
@@ -683,7 +683,10 @@ garch_model_bic <- function(input_frame_s, input_frame_i, max.p = 7, max.q = 7,
         distribution = "norm")
       ugarchfit(spec = model,
                 data = input_frame_s$price,
-                solver = "nloptr") %>%
+                solver = "nloptr",
+                fit.control = list(
+                  stationarity = 0
+                )) %>%
         infocriteria %>% 
         as.data.frame %>%
         add_rownames %>% 
@@ -709,7 +712,10 @@ garch_model_bic <- function(input_frame_s, input_frame_i, max.p = 7, max.q = 7,
         distribution = "norm")
       ugarchfit(spec = model,
                 data = input_frame_i$price,
-                solver = "nloptr") %>%
+                solver = "nloptr",
+                fit.control = list(
+                  stationarity = 0
+                )) %>%
         infocriteria %>% 
         as.data.frame %>%
         add_rownames %>% 
@@ -739,7 +745,7 @@ garch_model_bic <- function(input_frame_s, input_frame_i, max.p = 7, max.q = 7,
 
 #' @export
 garch_model_fit <- function(input_frame_s, input_frame_i,
-                            path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                            path = NULL,
                             country = "de") {
   
   input_frame_s %<>%
@@ -774,7 +780,10 @@ garch_model_fit <- function(input_frame_s, input_frame_i,
   
   garch_model_s <- ugarchfit(spec = model_s,
                            data = input_frame_s$price,
-                           solver = "nloptr") %>%
+                           solver = "nloptr",
+                           fit.control = list(
+                             stationarity = 0
+                           )) %>%
     `@`(fit) %>%
     `$`(matcoef) %>%
     as.data.frame %>%
@@ -805,7 +814,10 @@ garch_model_fit <- function(input_frame_s, input_frame_i,
   
   garch_model_i <- ugarchfit(spec = model_i,
                              data = input_frame_i$price,
-                             solver = "nloptr") %>%
+                             solver = "nloptr",
+                             fit.control = list(
+                               stationarity = 0
+                             )) %>%
     `@`(fit) %>%
     `$`(matcoef) %>%
     as.data.frame %>%
@@ -839,7 +851,7 @@ garch_model_fit <- function(input_frame_s, input_frame_i,
 
 #' @export
 garch_model_exogen_bic_1 <- function(input_frame_s, input_frame_i, input_frame_exp, max.p = 7, max.q = 7,
-                            path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                            path = NULL,
                             country = "de") {
   
   input_frame_exp %<>%
@@ -869,7 +881,10 @@ garch_model_exogen_bic_1 <- function(input_frame_s, input_frame_i, input_frame_e
         distribution = "norm")
       ugarchfit(spec = model,
                 data = input_frame_s$price,
-                solver = "nloptr") %>%
+                solver = "nloptr",
+                fit.control = list(
+                  stationarity = 0
+                )) %>%
         infocriteria %>% 
         as.data.frame %>%
         add_rownames %>% 
@@ -895,7 +910,10 @@ garch_model_exogen_bic_1 <- function(input_frame_s, input_frame_i, input_frame_e
         distribution = "norm")
       ugarchfit(spec = model,
                 data = input_frame_i$price,
-                solver = "nloptr") %>%
+                solver = "nloptr",
+                fit.control = list(
+                  stationarity = 0
+                )) %>%
         infocriteria %>% 
         as.data.frame %>%
         add_rownames %>% 
@@ -925,7 +943,7 @@ garch_model_exogen_bic_1 <- function(input_frame_s, input_frame_i, input_frame_e
 
 #' @export
 garch_model_exogen_fit_1 <- function(input_frame_s, input_frame_i, input_frame_exp,
-                            path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                            path = NULL,
                             country = "de") {
   
   input_frame_exp %<>%
@@ -953,7 +971,10 @@ garch_model_exogen_fit_1 <- function(input_frame_s, input_frame_i, input_frame_e
   
   garch_model_s <- ugarchfit(spec = model_s,
                              data = input_frame_s$price,
-                             solver = "nloptr") %>%
+                             solver = "nloptr",
+                             fit.control = list(
+                               stationarity = 0
+                             )) %>%
     `@`(fit) %>%
     `$`(matcoef) %>%
     as.data.frame %>%
@@ -985,7 +1006,10 @@ garch_model_exogen_fit_1 <- function(input_frame_s, input_frame_i, input_frame_e
   
   garch_model_i <- ugarchfit(spec = model_i,
                              data = input_frame_i$price,
-                             solver = "nloptr") %>%
+                             solver = "nloptr",
+                             fit.control = list(
+                               stationarity = 0
+                             )) %>%
     `@`(fit) %>%
     `$`(matcoef) %>%
     as.data.frame %>%
@@ -1023,7 +1047,7 @@ garch_model_exogen_fit_1 <- function(input_frame_s, input_frame_i, input_frame_e
 
 #' @export
 garch_model_exogen_bic_2 <- function(input_frame_s, input_frame_i, input_frame_exp, max.p = 7, max.q = 7,
-                                     path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                                     path = NULL,
                                      country = "de") {
   
   input_frame_exp %<>%
@@ -1056,7 +1080,10 @@ garch_model_exogen_bic_2 <- function(input_frame_s, input_frame_i, input_frame_e
         distribution = "norm")
       ugarchfit(spec = model,
                 data = input_frame_s$price,
-                solver = "nloptr") %>%
+                solver = "nloptr",
+                fit.control = list(
+                  stationarity = 0
+                )) %>%
         infocriteria %>% 
         as.data.frame %>%
         add_rownames %>% 
@@ -1082,7 +1109,10 @@ garch_model_exogen_bic_2 <- function(input_frame_s, input_frame_i, input_frame_e
         distribution = "norm")
       ugarchfit(spec = model,
                 data = input_frame_i$price,
-                solver = "nloptr") %>%
+                solver = "nloptr",
+                fit.control = list(
+                  stationarity = 0
+                )) %>%
         infocriteria %>% 
         as.data.frame %>%
         add_rownames %>% 
@@ -1112,7 +1142,7 @@ garch_model_exogen_bic_2 <- function(input_frame_s, input_frame_i, input_frame_e
 
 #' @export
 garch_model_exogen_fit_2 <- function(input_frame_s, input_frame_i, input_frame_exp,
-                                     path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                                     path = NULL,
                                      country = "de") {
   
   input_frame_exp %<>%
@@ -1143,7 +1173,10 @@ garch_model_exogen_fit_2 <- function(input_frame_s, input_frame_i, input_frame_e
   
   garch_model_s <- ugarchfit(spec = model_s,
                              data = input_frame_s$price,
-                             solver = "nloptr") %>%
+                             solver = "nloptr",
+                             fit.control = list(
+                               stationarity = 0
+                             )) %>%
     `@`(fit) %>%
     `$`(matcoef) %>%
     as.data.frame %>%
@@ -1175,7 +1208,10 @@ garch_model_exogen_fit_2 <- function(input_frame_s, input_frame_i, input_frame_e
   
   garch_model_i <- ugarchfit(spec = model_i,
                              data = input_frame_i$price,
-                             solver = "nloptr") %>%
+                             solver = "nloptr",
+                             fit.control = list(
+                               stationarity = 0
+                             )) %>%
     `@`(fit) %>%
     `$`(matcoef) %>%
     as.data.frame %>%
@@ -1214,12 +1250,12 @@ garch_model_exogen_fit_2 <- function(input_frame_s, input_frame_i, input_frame_e
 #' Escribano model 1
 #'
 #'@export
-Escribano_1 <- function(path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+Escribano_1 <- function(path = NULL,
                         country = "de") {
   
-  input_s <- read.csv(sprintf("C:/git/r/powerfor/inst/matlab/log_lik_model_1/output/fit_model_1_%s_spot.csv", country),
+  input_s <- read.csv(fit_file,
                       header = FALSE)
-  input_i <- read.csv(sprintf("C:/git/r/powerfor/inst/matlab/log_lik_model_1/output/fit_model_1_%s_intraday.csv", country),
+  input_i <- read.csv(fit_file,
                       header = FALSE)
   
   out_s <- data.frame(Parameter = c("$\\kappa_0$", "$\\kappa_1$","$\\kappa_2$",
@@ -1266,12 +1302,13 @@ Escribano_1 <- function(path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thes
 #' Escribano model 2
 #'
 #'@export
-Escribano_2 <- function(path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
-                        country = "de") {
+Escribano_2 <- function(path = NULL,
+                        country = "de",
+                        fit_file = NULL) {
   
-  input_s <- read.csv(sprintf("C:/git/r/powerfor/inst/matlab/log_lik_model_2/output/fit_model_2_%s_spot.csv", country),
+  input_s <- read.csv(fit_file,
                       header = FALSE)
-  input_i <- read.csv(sprintf("C:/git/r/powerfor/inst/matlab/log_lik_model_2/output/fit_model_2_%s_intraday.csv", country),
+  input_i <- read.csv(fit_file,
                       header = FALSE)
   
   out_s <- data.frame(Parameter = c("$\\phi_1$", "$\\phi_2$",
@@ -1320,12 +1357,13 @@ Escribano_2 <- function(path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thes
 #' Escribano model 3
 #'
 #'@export
-Escribano_3 <- function(path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
-                        country = "de") {
+Escribano_3 <- function(path = NULL,
+                        country = "de",
+                        fit_file = NULL) {
   
-  input_s <- read.csv(sprintf("C:/git/r/powerfor/inst/matlab/log_lik_model_3/output/fit_model_3_%s_spot.csv", country),
+  input_s <- read.csv(fit_file,
                       header = FALSE)
-  input_i <- read.csv(sprintf("C:/git/r/powerfor/inst/matlab/log_lik_model_3/output/fit_model_3_%s_intraday.csv", country),
+  input_i <- read.csv(fit_file,
                       header = FALSE)
   
   out_s <- data.frame(Parameter = c("$\\kappa_0$", "$\\kappa_1$","$\\kappa_2$",
@@ -1363,6 +1401,70 @@ Escribano_3 <- function(path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thes
            digits = 4) %>%
       print(type = "latex",
             file = paste0(path, "/", country, "_escribano2012_c_fit.tex"),
+            floating = FALSE,
+            sanitize.text.function = function(x){x},
+            include.rownames = FALSE)
+  }
+}
+
+#' Escribano model 4
+#'
+#'@export
+Escribano_4 <- function(path = NULL,
+                        country = "de",
+                        fit_file = NULL) {
+  
+  input_s <- read.csv(fit_file,
+                      header = FALSE)
+  input_i <- read.csv(fit_file,
+                      header = FALSE)
+  
+  n_s <- readRDS(sprintf("/inst/rds/data_%s_spot.rds", country)) %>% 
+    filter(date < "2013-01-01") %>%
+    use_series(price) %>%
+    length
+  n_i <- readRDS(sprintf("/inst/rds/data_%s_intraday.rds", country)) %>% 
+    filter(date < "2013-01-01") %>%
+    use_series(price) %>%
+    length
+  
+  out_s <- data.frame(Parameter = c("$\\kappa_0$", "$\\kappa_1$","$\\kappa_2$",
+                                    "$\\kappa_3$", "$\\kappa_4$", "$\\kappa_5$",
+                                    "$\\kappa_6$", "$\\phi_1$", "$\\phi_2$",
+                                    "$\\phi_3$", "$\\phi_4$", "$\\phi_5$",
+                                    "$\\phi_6$", "$\\phi_7$", "$\\omega$",
+                                    "$\\alpha$", "$\\beta$", "$\\gamma_1$",
+                                    "$\\gamma_2$", "$\\mu$", "$\\sigma$",
+                                    "$\\eta$"),
+                      Estimate = input_s[, 1],
+                      Std.Error = input_s[, 2]) %>%
+    mutate(t.statistic = Estimate / Std.Error,
+           p.value = (2 * pt(abs(t.statistic),
+                             n_s - length(input_s) - 1,
+                             lower = FALSE)) %>% round(4))
+  
+  out_i <- data.frame(Parameter = c("$\\kappa_0$", "$\\kappa_1$","$\\kappa_2$",
+                                    "$\\kappa_3$", "$\\kappa_4$", "$\\kappa_5$",
+                                    "$\\kappa_6$", "$\\phi_1$", "$\\phi_2$",
+                                    "$\\phi_3$", "$\\phi_4$", "$\\phi_5$",
+                                    "$\\phi_6$", "$\\phi_7$", "$\\omega$",
+                                    "$\\alpha$", "$\\beta$", "$\\gamma_1$",
+                                    "$\\gamma_2$", "$\\mu$", "$\\sigma$",
+                                    "$\\eta$"),
+                      Estimate = input_i[, 1],
+                      Std.Error = input_i[, 2]) %>%
+    mutate(t.statistic = Estimate / Std.Error,
+           p.value = (2 * pt(abs(t.statistic),
+                             n_i - length(input_i) - 1,
+                             lower = FALSE)) %>% round(4))
+  
+  out <- rbind(out_s, out_i)
+  
+  if (!is.null(path)) {
+    xtable(out,
+           digits = 3) %>%
+      print(type = "latex",
+            file = paste0(path, "/", country, "_escribano2012_res_fit.tex"),
             floating = FALSE,
             sanitize.text.function = function(x){x},
             include.rownames = FALSE)

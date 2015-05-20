@@ -4,7 +4,7 @@
 #' @importFrom rvest html html_nodes html_text
 
 #' @importFrom dplyr rbind_all group_by ungroup summarise mutate n select filter 
-#'    transmute left_join add_rownames rename
+#'    transmute left_join add_rownames rename arrange
 
 #' @importFrom tidyr gather spread
 

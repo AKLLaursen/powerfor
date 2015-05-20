@@ -4,7 +4,7 @@ function [theta_hat, hessian] = optim_model_2(theta, input_matrix)
 
 options  =  optimset('fmincon');
 options = optimset(options, 'Diagnostics', 'on', 'Display', 'iter', ...
-    'LargeScale', 'on', 'MaxFunEvals',  1000000, 'MaxIter', 100000);
+    'LargeScale', 'on', 'MaxFunEvals',  10000, 'MaxIter', 10000);
 
  
 b = zeros(3, 1);

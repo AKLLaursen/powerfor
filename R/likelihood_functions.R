@@ -3,7 +3,7 @@
 #' @export
 #'
 log_lik_model_a <- function(input_frame_s, input_frame_i,
-                            path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                            path = NULL,
                             country = "de") {
   
   input_frame_s %<>% 
@@ -97,7 +97,7 @@ log_lik_model_a <- function(input_frame_s, input_frame_i,
 #' @export
 #'
 log_lik_model_b <- function(input_frame_s, input_frame_i,
-                            path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                            path = NULL,
                             country = "de") {
   
   input_frame_s %<>% 
@@ -205,7 +205,7 @@ log_lik_model_b <- function(input_frame_s, input_frame_i,
 #' @export
 #'
 log_lik_model_c <- function(input_frame_s, input_frame_i,
-                            path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Tables",
+                            path = NULL,
                             country = "de") {
   
   input_frame_exp %<>% 

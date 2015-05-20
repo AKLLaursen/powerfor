@@ -243,3 +243,42 @@ filter_only_outliers <- function(input_frame, std_filt = 3) {
   
   return(data_frame_out)
 }
+
+#' @export
+filter_only_outliers_hourly <- function(input_frame, std_filt = 3, hour_seq = 10) {
+  set_date_time()
+  
+  data_frame <- input_frame %>%
+    filter(hour == hour_seq)
+  
+  trend_seas_fit <- seasonal_filter(data_frame)
+  deseason_data_frame <- data_frame %>% 
+    transmute(date,
+              trend = 1:n(),
+              dum_week = ifelse(format(date, "%a") == "Sat" | 
+                                  format(date, "%a") == "Sun", 0, 1),
+              price = price -
+                (trend_seas_fit[1] + trend_seas_fit[2] * trend +
+                   trend_seas_fit[3]  * sin((trend + trend_seas_fit[4])
+                                            * 2 * pi / 365) +
+                   trend_seas_fit[5] * sin((trend + trend_seas_fit[6])
+                                           * 4 * pi / 365) +
+                   trend_seas_fit[7] * dum_week),
+              trend_seas = (trend_seas_fit[1] + trend_seas_fit[2] * trend +
+                              trend_seas_fit[3]  * sin((trend + trend_seas_fit[4])
+                                                       * 2 * pi / 365) +
+                              trend_seas_fit[5] * sin((trend + trend_seas_fit[6])
+                                                      * 4 * pi / 365) +
+                              trend_seas_fit[7] * dum_week)) %>%
+    select(-trend)
+  
+  data_frame$price[which(deseason_data_frame$price >
+                           std_filt * sd(deseason_data_frame$price) |
+                           deseason_data_frame$price <
+                           - std_filt * sd(deseason_data_frame$price))] <- NA
+  
+  data_frame_out <- data_frame %>%
+    mutate(price = na_filter(price))
+  
+  return(data_frame_out)
+}

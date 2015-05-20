@@ -9,7 +9,7 @@
 #' 
 power_characteristics <- function(input_frame_spot,
                                   input_frame_intraday,
-                                  save_path = "C:/Users/akl/Dropbox/Economics/Final_Thesis/Thesis/Child Documents/A_Brief_Overview_of_Electricity_Markets/Figures",
+                                  save_path = NULL,
                                   do_print = FALSE) {
   
   input_frame_spot_long <- input_frame_spot
@@ -74,4 +74,226 @@ power_characteristics <- function(input_frame_spot,
            save_path,
            do_print = do_print)
   
+}
+
+#' @export
+desc_stat_and_plots_spot <- function(path_tables = NULL, path_figures = NULL) {
+  input_frame_de <- readRDS("/inst/rds/data_de_spot.rds")
+  input_frame_fr <- readRDS("/inst/rds/data_fr_spot.rds")
+  
+  input_frame_de %<>%
+    group_by(date) %>% 
+    summarise(price = mean(price)) %>% 
+    ungroup()
+  input_frame_fr %<>%
+    group_by(date) %>% 
+    summarise(price = mean(price)) %>% 
+    ungroup()
+  
+  de_desc <- input_frame_de %>%
+    summarise(n = n(),
+              Mean = mean(price),
+              Min = min(price),
+              Max = max(price),
+              `Std.dev.` = sd(price),
+              Skew = skewness(price),
+              Kurt = kurtosis(price))
+  
+  fr_desc <- input_frame_fr %>%
+    summarise(n = n(),
+              Mean = mean(price),
+              Min = min(price),
+              Max = max(price),
+              `Std.dev.` = sd(price),
+              Skew = skewness(price),
+              Kurt = kurtosis(price))
+  
+  out <- rbind(de_desc, fr_desc)
+  
+  if (!is.null(path)) {
+    xtable(out,
+           digits = 2) %>%
+      print(type = "latex",
+            file = paste0(path_tables, "/spot_desc.tex"),
+            floating = FALSE,
+            include.rownames = FALSE)
+  }
+  
+  draw_multi_line_plot(input_frame_de, input_frame_fr, "Year", "Eur/MWh", "price", file_name = "spot_series.eps",
+                  save_path = path_figures, do_print = TRUE)
+  draw_density(input_frame_de, input_frame_fr, "Eur/MWh", "Density", "price", file_name = "spot_density.eps",
+               save_path = path_figures, do_print = TRUE)
+  draw_acf_and_per(input_frame_de, lags = 28, input = "price", file_name = "de_spot_afc.eps",
+                   save_path = path_figures,
+                   do_print = TRUE)
+  draw_acf_and_per(input_frame_fr, lags = 28, input = "price", file_name = "fr_spot_afc.eps",
+                   save_path = path_figures,
+                   do_print = TRUE)
+  
+  input_frame_de_filtered <- input_frame_de %>%
+    pre_model_processing()
+  input_frame_fr_filtered <- input_frame_fr %>% 
+    pre_model_processing()
+  
+  draw_multi_line_plot(input_frame_de_filtered, input_frame_fr_filtered, "Year", "Eur/MWh", "price", file_name = "filtered_spot_series.eps",
+                       save_path = path_figures, do_print = TRUE)
+  draw_density(input_frame_de_filtered, input_frame_fr_filtered, "Eur/MWh", "Density", "price", file_name = "filtered_spot_density.eps",
+               save_path = path_figures, do_print = TRUE)
+  draw_acf_and_per(input_frame_de_filtered, lags = 28, input = "price", file_name = "de_filtered_spot_afc.eps",
+                   save_path = path_figures,
+                   do_print = TRUE)
+  draw_acf_and_per(input_frame_fr_filtered, lags = 28, input = "price", file_name = "fr_filtered_spot_afc.eps",
+                   save_path = path_figures,
+                   do_print = TRUE)
+}
+
+#' @export
+desc_stat_and_plots_intraday <- function(path_table = NULL,
+                                         path_figure = NULL) {
+  input_frame_de <- readRDS("/inst/rds/data_de_intraday.rds")
+  input_frame_fr <- readRDS("/inst/rds/data_fr_intraday.rds")
+  
+  input_frame_de %<>%
+    group_by(date) %>% 
+    summarise(price = mean(price)) %>% 
+    ungroup()
+  input_frame_fr %<>%
+    group_by(date) %>% 
+    summarise(price = mean(price)) %>% 
+    ungroup()
+  
+  de_desc <- input_frame_de %>%
+    summarise(n = n(),
+              Mean = mean(price),
+              Min = min(price),
+              Max = max(price),
+              `Std.dev.` = sd(price),
+              Skew = skewness(price),
+              Kurt = kurtosis(price))
+  
+  fr_desc <- input_frame_fr %>%
+    summarise(n = n(),
+              Mean = mean(price),
+              Min = min(price),
+              Max = max(price),
+              `Std.dev.` = sd(price),
+              Skew = skewness(price),
+              Kurt = kurtosis(price))
+  
+  out <- rbind(de_desc, fr_desc)
+  
+  if (!is.null(path)) {
+    xtable(out,
+           digits = 2) %>%
+      print(type = "latex",
+            file = paste0(path_table, "/intraday_desc.tex"),
+            floating = FALSE,
+            include.rownames = FALSE)
+  }
+  
+  draw_multi_line_plot(input_frame_de, input_frame_fr, "Year", "Eur/MWh", "price", file_name = "intraday_series.eps",
+                       save_path = path_figure, do_print = TRUE)
+  draw_density(input_frame_de, input_frame_fr, "Eur/MWh", "Density", "price", file_name = "intraday_density.eps",
+               save_path = path_figure, do_print = TRUE)
+  draw_acf_and_per(input_frame_de, lags = 28, input = "price", file_name = "de_intraday_afc.eps",
+                   save_path = path_figure,
+                   do_print = TRUE)
+  draw_acf_and_per(input_frame_fr, lags = 28, input = "price", file_name = "fr_intraday_afc.eps",
+                   save_path = path_figure,
+                   do_print = TRUE)
+  
+  input_frame_de_filtered <- input_frame_de %>%
+    pre_model_processing()
+  input_frame_fr_filtered <- input_frame_fr %>% 
+    pre_model_processing()
+  
+  draw_multi_line_plot(input_frame_de_filtered, input_frame_fr_filtered, "Year", "Eur/MWh", "price", file_name = "filtered_intraday_series.eps",
+                       save_path = path_figure, do_print = TRUE)
+  draw_density(input_frame_de_filtered, input_frame_fr_filtered, "Eur/MWh", "Density", "price", file_name = "filtered_intraday_density.eps",
+               save_path = path_figure, do_print = TRUE)
+  draw_acf_and_per(input_frame_de_filtered, lags = 28, input = "price", file_name = "de_filtered_intraday_afc.eps",
+                   save_path = path_figure,
+                   do_print = TRUE)
+  draw_acf_and_per(input_frame_fr_filtered, lags = 28, input = "price", file_name = "fr_filtered_intraday_afc.eps",
+                   save_path = path_figure,
+                   do_print = TRUE)
+  
+  input_frame_exo_de <- readRDS("/inst/rds/data_de_exogen.rds") %>% 
+    group_by(date) %>%
+    summarise(cons_forecast = mean(cons_forecast),
+              wind_forecast = mean(wind_forecast),
+              solar_forecast = mean(solar_forecast),
+              residual_load = mean(residual_load)) %>%
+    ungroup
+  input_frame_exo_fr <- readRDS("/inst/rds/data_fr_exogen.rds") %>% 
+    group_by(date) %>%
+    summarise(cons_forecast = mean(cons_forecast),
+              wind_forecast = mean(wind_forecast),
+              residual_load = mean(residual_load)) %>%
+    ungroup
+  
+  input_frame_de_spot <- readRDS("/inst/rds/data_de_intraday.rds") %>%
+    group_by(date) %>% 
+    summarise(price = mean(price)) %>% 
+    ungroup()
+  input_frame_fr_spot <- readRDS("/inst/rds/data_fr_intraday.rds") %>%
+    group_by(date) %>% 
+    summarise(price = mean(price)) %>% 
+    ungroup()
+  
+  input_frame_de_intraday <- readRDS("/inst/rds/data_de_intraday.rds") %>%
+    group_by(date) %>% 
+    summarise(price = mean(price)) %>% 
+    ungroup()
+  input_frame_fr_intraday <- readRDS("/inst/rds/data_fr_intraday.rds") %>%
+    group_by(date) %>% 
+    summarise(price = mean(price)) %>% 
+    ungroup()
+  
+  draw_multi_line_plot_de(input_frame_exo_de, file_name = "de_exogen.eps",
+                          save_path = path_figure,
+                          do_print = TRUE)
+  draw_multi_line_plot_fr(input_frame_exo_fr, file_name = "fr_exogen.eps",
+                          save_path = path_figure,
+                          do_print = TRUE)
+  
+  draw_scatter(input_frame_de_spot, input_frame_de_intraday, input_frame_exo_de, country = "de",
+               save_path = path_figure,
+               do_print = TRUE)
+  
+  draw_scatter(input_frame_fr_spot, input_frame_fr_intraday, input_frame_exo_fr, country = "fr",
+               save_path = path_figure,
+               do_print = TRUE)
+  
+  de_exo_desc <- input_frame_exo_de %>%
+    summarise(n = n(),
+              Mean = mean(residual_load),
+              Min = min(residual_load),
+              Max = max(residual_load),
+              `Std.dev.` = sd(residual_load),
+              Skew = skewness(residual_load),
+              Kurt = kurtosis(residual_load))
+  
+  fr_exo_desc <- input_frame_exo_fr %>%
+    summarise(n = n(),
+              Mean = mean(residual_load),
+              Min = min(residual_load),
+              Max = max(residual_load),
+              `Std.dev.` = sd(residual_load),
+              Skew = skewness(residual_load),
+              Kurt = kurtosis(residual_load))
+  
+  out <- rbind(de_exo_desc, fr_exo_desc)
+  
+  if (!is.null(path)) {
+    xtable(out,
+           digits = 2) %>%
+      print(type = "latex",
+            file = paste0(path_table, "/residual_load_desc.tex"),
+            floating = FALSE,
+            include.rownames = FALSE)
+  }
+  
+  draw_density(input_frame_exo_de, input_frame_exo_fr, "Residual load, MWh", "Density", "residual_load", file_name = "residual_load_density.eps",
+               save_path = path_figure, do_print = TRUE)
 }
